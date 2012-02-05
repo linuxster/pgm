@@ -1,0 +1,212 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{fancyhdr}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% header
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\fancyhead[R]{Daniel Foreman-Mackey}
+\fancyhead[L]{Probabilistic Graphical Models --- Problem Set 1}
+\pagestyle{fancy}
+\setlength{\headsep}{20pt}
+
+% shortcuts
+\newcommand{\Eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eqlabel}[1]{\label{eq:#1}}
+
+% commands
+\newcommand{\pr}[1]{\ensuremath{p(#1)}}
+\newcommand{\no}[1]{\ensuremath{\tilde{#1}}}
+
+\begin{document}
+
+% === Problem 1 ===
+
+\section{Problem 1}
+
+\paragraph{(a)} The joint distribution \pr{X,Y}
+
+\begin{equation}
+    \begin{array}{r|ccc}
+        X=  & 0 & 1 & 2 \\\hline
+        Y=0 & 1/16 & 0 & 0 \\
+        1 & 1/8 & 1/8 & 0 \\
+        2 & 1/16 & 1/4 & 1/16 \\
+        3 & 0 & 1/8 & 1/8 \\
+        4 & 0 & 0 & 1/16 \\
+    \end{array}
+\end{equation}
+
+\paragraph{(b)} The marginals \pr{X} and \pr{Y}
+
+\begin{equation}
+    \begin{array}{r|ccc}
+        X=  & 0 & 1 & 2 \\\hline
+        \pr{X} & 1/4 & 1/2 & 1/4
+    \end{array} \hspace{2cm}
+    \begin{array}{r|ccccc}
+        Y=  & 0 & 1 & 2 & 3 & 4 \\\hline
+        \pr{Y} & 1/16 & 1/4 & 3/8 & 1/4 & 1/16
+    \end{array}
+\end{equation}
+
+\paragraph{(c)} The conditionals \pr{X|Y} and \pr{Y|X}
+
+\begin{equation}
+    \begin{array}{r|ccc}
+        X=  & 0 & 1 & 2 \\\hline
+        Y=0 & 1 & 0 & 0 \\
+        1 & 1/2 & 1/2 & 0 \\
+        2 & 1/6 & 2/3 & 1/6 \\
+        3 & 0 & 1/2 & 1/2 \\
+        4 & 0 & 0 & 1 \\
+    \end{array} \hspace{2cm}
+    \begin{array}{r|ccc}
+        X=  & 0 & 1 & 2 \\\hline
+        Y=0 & 1/4 & 0 & 0 \\
+        1 & 1/2 & 1/4 & 0 \\
+        2 & 1/4 & 1/2 & 1/4 \\
+        3 & 0 & 1/4 & 1/2 \\
+        4 & 0 & 0 & 1/4 \\
+    \end{array}
+\end{equation}
+
+\paragraph{(d)} The distribution of $Z = Y-X$, \pr{Z}
+
+\begin{equation}
+    \begin{array}{r|ccc}
+        Z=  & 0 & 1 & 2 \\\hline
+        \pr{Z} & 1/4 & 1/2 & 1/4
+    \end{array}
+\end{equation}
+
+% === Problem 2 ===
+\section{Problem 2}
+
+The conditional probabilities implied by this situation are as follows:
+
+\begin{itemize}
+
+    \item{The probability of testing positive given that you have the disease
+        is $\pr{t|d} = 0.99$.}
+    \item{The probability of testing positive given that you \emph{don't}
+        have the disease is $\pr{t|\no{d}} = 0.01$.}
+    \item{The marginal probability of having the disease is only
+        $\pr{d} = 10^{-4}$ and the probability of not having the disease
+        is $\pr{\no{d}} = 1-10^{-4}$.}
+    \item{Therefore, the marginal probability of testing positive is
+        \begin{equation}
+            \pr{t} = \pr{t|d} \, \pr{d} + \pr{t|\no{d}} \, \pr{\no{d}}
+                   = 0.99 \times 10^{-4} + 0.01 \, (1-10^{-4})
+                   = 100.98 \times 10^{-4}
+        \end{equation}
+    }
+
+\end{itemize}
+
+\noindent The value that the patient really cares about, though is the
+probability that they have the disease given that they tested positive
+\pr{d | t}. This --- by Bayes --- is
+\begin{equation}
+    \pr{d | t} = \frac{\pr{d} \, \pr{t | d}}{\pr{t}}
+               = \frac{0.99 \times 10^{-4}}{100.98 \times 10^{-4}}
+               \approx 0.0098 \ll 1.
+\end{equation}
+
+% === Problem 3 ===
+\section{Problem 3}
+
+% === Problem 4 ===
+\section{Problem 4}
+
+We are given the three statements
+
+\begin{enumerate}
+    \item{\label{s1}$\pr{A,B|C} = \pr{A|C}\,\pr{B|C}$}
+    \item{\label{s2}$\pr{A|B,C} = \pr{A|C}$}
+    \item{\label{s3}$\pr{B|A,C} = \pr{B|C}$}
+\end{enumerate}
+
+\noindent To see that statement \ref{s1} implies statement \ref{s2}, apply
+the chain rule to find
+\begin{equation}
+    \pr{A|C}\,\pr{B|C} \stackrel{1}{=} \pr{A,B|C} = \pr{B|C} \, \pr{A | B,C}.
+\end{equation}
+Cancelling \pr{B|C} on both sides, we find statement 2. Therefore, it is
+clear that statement 1 implies statement 2. Also, since we have only used
+the chain rule, the inverse also applies. Specifically, applying the chain
+rule to statement 2, we find
+\begin{equation}
+    \pr{A|B,C} = \frac{\pr{A,B|C}}{\pr{B|C}} \stackrel{2}{=} \pr{A|C}
+        \to [\mathrm{Statement}\,1].
+\end{equation}
+Similarly, statement 1 implies statement 3 as follows
+\begin{equation}
+    \pr{A|C}\,\pr{B|C} \stackrel{1}{=} \pr{A,B|C} = \pr{A|C} \, \pr{B|A,C}
+        \to [\mathrm{Statement}\,3]
+\end{equation}
+and the inverse
+\begin{equation}
+    \pr{B|A,C} = \frac{\pr{A,B|C}}{\pr{A|C}} \stackrel{3}{=} \pr{B|C}
+        \to [\mathrm{Statement}\,1].
+\end{equation}
+Finally, since the equivalence holds between 1 and 2 and also between 1 and 3,
+it is clear that 2 and 3 are also equivalent.
+
+
+% === Problem 5 ===
+\section{Problem 5}
+
+\paragraph{(a)}
+
+By Bayes' Theorem,
+\begin{equation}
+    \eqlabel{p51}
+    \pr{H | E_1,E_2} = \frac{\pr{E_1, E_2|H} \, \pr{H}}{\pr{E_1,E_2}}.
+\end{equation}
+Therefore, set (ii) is clearly sufficient for this calculation. Without any
+conditional independence assumptions, \eq{p51} cannot be simplified any
+further so the other two sets are not sufficient. In particular,
+$\pr{E_1, E_2|H} \ne \pr{E_1|H}\,\pr{E_2|H}$ unless $E_1 \perp E_2 | H$.
+
+\paragraph{(b)}
+
+Since $E_1 \perp E_2 | H$, $\pr{E_1, E_2|H} = \pr{E_1|H}\,\pr{E_2|H}$ and
+\eq{p51} becomes
+\begin{equation}
+    \pr{H | E_1,E_2} = \frac{\pr{E_1|H}\, \pr{E_2|H} \, \pr{H}}{\pr{E_1,E_2}}.
+\end{equation}
+Therefore, sets (i) and (ii) are now sufficient. Set (iii) is not sufficient
+because it would require that $E_1 \perp E_2$ but $E_1$ and $E_2$ are only
+\emph{conditionally} independent.
+
+% === Problem 6 ===
+\section{Problem 6}
+
+% === Problem 7 ===
+\section{Problem 7}
+
+% === Problem 8 ===
+\section{Problem 8}
+
+\paragraph{(a)}
+
+The set $A$ is $\{ X_2, X_3, X_4, X_5, X_8 \}$. Clearly, all the nodes
+that are directly connected to $X_1$ (i.e.~$\{ X_2, X_3, X_4, X_8 \}$) must
+be included in $A$ because a direct connection always constitutes an active
+path. The inclusion of $X_5$ is not immediately obvious but if we just look
+at the part of the graph containing $X_5$, we find the V-structure
+$X_1 \to X_3 \gets X_5$. If we condition on $X_3$ (which we will do because
+it is one of the directly connected nodes), it couples its parents $X_1$
+and $X_5$.  Therefore, to satisfy the condition $X_1 \perp \chi-A-\{X_1\}|A$,
+we must also include $X_5$ in $A$.  After the inclusion of $X_5$, there are
+no other active paths between $X_1$ and other nodes outside of $A$ --- this
+can be easily seen by trying them all.
+
+\end{document}
+

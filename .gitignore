@@ -1,0 +1,10 @@
+*.swp
+.DS_Store
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.dvi
+*.ps
+*.eps

@@ -5,6 +5,8 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+\usepackage[pdftex]{graphicx}
+
 % header
 \fancyhead{}
 \fancyfoot{}
@@ -18,10 +20,14 @@
 \newcommand{\Eq}[1]{Equation (\ref{eq:#1})}
 \newcommand{\eq}[1]{Equation (\ref{eq:#1})}
 \newcommand{\eqlabel}[1]{\label{eq:#1}}
+\newcommand{\Fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\figlabel}[1]{\label{fig:#1}}
 
 % commands
 \newcommand{\pr}[1]{\ensuremath{p(#1)}}
 \newcommand{\no}[1]{\ensuremath{\tilde{#1}}}
+\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
 
 \begin{document}
 
@@ -207,6 +213,166 @@ and $X_5$.  Therefore, to satisfy the condition $X_1 \perp \chi-A-\{X_1\}|A$,
 we must also include $X_5$ in $A$.  After the inclusion of $X_5$, there are
 no other active paths between $X_1$ and other nodes outside of $A$ --- this
 can be easily seen by trying them all.
+
+\paragraph{(b)}
+
+% === Problem 9 ===
+\section{Problem 9}
+
+\paragraph{(a)}
+
+Without any conditioning, the only (non-trivial) active paths in this graph
+are: $1 \to 6 \to 4$, $8 \to 9 \to 5$, $4 \to 7 \to 9 \to 5$,
+$4 \to 2 \to 10 \to 3 \to 9 \to 5$, $4 \to 6 \to 2 \to 10 \to 3 \to 9 \to 5$
+and $6 \to 2 \to 4$.
+Therefore, this implies the following set of independences:
+$X_1 \perp X_2, X_3, X_5, X_7, X_8, X_9, X_{10}$, {$X_2 \perp X_1, X_7, X_8$}
+{$X_3 \perp X_1, X_7, X_8$},
+{$X_4 \perp X_8$},
+{$X_5 \perp X_1$},
+{$X_6 \perp X_7, X_8$},
+{$X_7 \perp X_1, X_2, X_3, X_6, X_8, X_{10}$},
+{$X_8 \perp X_1, X_2, X_3, X_4, X_6, X_7, X_{10}$},
+{$X_9 \perp X_1$}, and
+{$X_{10} \perp X_1, X_7, X_8$}. This can be more clearly summarized in the
+following table:
+
+\begin{equation}
+    \begin{array}{c|cccccccccc}
+            & 1     & 2     & 3     & 4     & 5     & 6     & 7     & 8     & 9     & 10     \\\hline
+        1   &       & \perp & \perp &       & \perp &       & \perp & \perp & \perp & \perp  \\
+        2   & \perp &       &       &       &       &       & \perp & \perp &       &        \\
+        3   & \perp &       &       &       &       &       & \perp & \perp &       &        \\
+        4   &       &       &       &       &       &       &       & \perp &       &        \\
+        5   & \perp &       &       &       &       &       &       &       &       &        \\
+        6   &       &       &       &       &       &       & \perp & \perp &       &        \\
+        7   & \perp & \perp & \perp &       &       & \perp &       & \perp &       & \perp  \\
+        8   & \perp & \perp & \perp & \perp &       & \perp & \perp &       &       & \perp  \\
+        9   & \perp &       &       &       &       &       &       &       &       &        \\
+        10  & \perp &       &       &       &       &       & \perp & \perp &       &        \\
+    \end{array}
+\end{equation}
+
+\paragraph{(b)}
+
+The conditioning on $\{ X_2, X_9 \}$ does not actually affect the set of
+independences implied by the graph structure for $X_1$.  Therefore, the
+largest set $A$ is $\{ X_3, X_5, X_7, X_8, X_{10} \}$.
+
+\paragraph{(c)}
+
+Using the $d$-separation algorithm from Koller~\&~Friedman, we find that the
+only active paths (after conditioning on $\{ X_2, X_9 \}$) containing the node
+$X_8$ are $8 \to 9 \to 3 \to 10 \to 2$ and $8 \to 9 \to 7 \to 4$.  Therefore,
+the set $B$ is $\{ X_1, X_5, X_6 \}$.
+
+% === Problem 10 ===
+\section{Problem 10 --- Exercise 3.11}
+
+% === Problem 11 ===
+\section{Problem 11 --- Exercise 3.15}
+
+The set of independences implied by graph (a) are $D \perp A,C | B$ and
+$A \perp C$. There are no other $I$-equivalent graphs.
+The independences implied by the Bayesian network (b) are $A \perp C,D|B$ and
+$C \perp D | B$.  The four Bayesian networks (including (b) from the exercise)
+in \fig{gm1} all imply this same independence structure. Therefore, they
+are all $I$-equivalent.
+
+\begin{figure}[hbtp]
+    \centering
+    \includegraphics[width=0.8\textwidth,%
+        trim=1.9cm 18cm 0.8cm 3cm,clip=true]{gm/gm1.pdf}
+    \caption{Four $I$-equivalent Bayesian networks. \figlabel{gm1}}
+\end{figure}
+
+% === Problem 12 ===
+\section{Problem 12 --- Exercise 3.2}
+
+\paragraph{(a)}
+
+The assumption given in Equation (3.6) is that each feature $X_i$ is
+independent of the other features $\chi - \{X_i\}$ conditioned on the class
+$C$. This can be written as $X_i \perp \chi - \{X_i\} | C$. Any joint
+distribution $\pr{C, X_1, \ldots, X_n}$ can be factored (using the chain
+rule) into $\pr{C} \, \pr{X_1, \ldots, X_n | C}$. Then, for a particular
+feature $X_i$, the conditional independence assumption above implies that
+\begin{equation}
+    \pr{X_i, \chi-\{X_i\} | C} = \pr{X_i|C} \, \pr{\chi-\{X_i\} | C}.
+\end{equation}
+Applying the conditional independence assumption again, we find
+\begin{equation}
+    \pr{X_i|C} \, \pr{X_j, \chi-\{X_i, X_j\} | C}
+        = \pr{X_i|C} \, \pr{X_j|C} \, \pr{\chi-\{X_i, X_j\} | C}.
+\end{equation}
+We can iterate this procedure for all values of $i = 1, \ldots, n$ to find
+that
+\begin{equation}
+    \pr{X_1, \ldots, X_n | C} = \prod_{i=1}^{n} \pr{X_i | C}.
+\end{equation}
+Therefore, the conditional independence assumption from Equation (3.6)
+implies that the join distribution can be factored
+\begin{equation}\eqlabel{37}
+    \pr{C, X_1, \ldots, X_n} = \pr{C} \, \prod_{i=1}^{n} \pr{X_i | C}
+\end{equation}
+which is exactly the result from Equation (3.7).
+
+\paragraph{(b)}
+
+Using the chain rule, we can rewrite the joint probability above as
+\begin{equation}
+    \pr{C,\bvec{X}} = \pr{\bvec{X}} \, \pr{C | \bvec{X}}.
+\end{equation}
+Therefore, the ratio of joint probabilities can be written (for the observed
+feature vector \bvec{x})
+\begin{equation}
+    \frac{\pr{c_1, \bvec{x}}}{\pr{c_2, \bvec{x}}}
+        = \frac{\pr{c_1 | \bvec{x}}}{\pr{c_2 | \bvec{x}}}.
+\end{equation}
+Then, using \eq{37}, this ratio can also be written
+\begin{equation}
+    \frac{\pr{c_1, \bvec{x}}}{\pr{c_2, \bvec{x}}} = \frac{\pr{c_1}}{\pr{c_2}}
+        \prod_{i=1}^{n} \frac{\pr{x_i | c_1}}{\pr{x_i | c_2}}.
+\end{equation}
+Equating these two expressions, we find the expected Equation (3.8):
+\begin{equation}\eqlabel{modcomp}
+    \frac{\pr{c_1 | \bvec{x}}}{\pr{c_2 | \bvec{x}}}
+    = \frac{\pr{c_1}}{\pr{c_2}}
+        \prod_{i=1}^{n} \frac{\pr{x_i | c_1}}{\pr{x_i | c_2}}.
+\end{equation}
+
+\paragraph{(c)}
+
+Taking the logarithm of \eq{modcomp}, we find
+\begin{equation}
+    \log \left [ \frac{\pr{c_1 | \bvec{x}}}{\pr{c_2 | \bvec{x}}} \right ]
+        = \log \left [ \frac{\pr{c_1}}{\pr{c_2}} \right ] \,
+            \sum_{i=1}^n
+            \left [ \log \pr{x_i | c_1} - \log \pr{x_i | c_2} \right ]
+\end{equation}
+
+{\bf ***Wording?}
+
+% === Problem 13 ===
+\section{Problem 13}
+
+\paragraph{(a)}
+
+A recursive equation for the marginalized probability $\pr{X_i = 1}$ is given
+by
+\begin{equation}\eqlabel{recurse}
+    \pr{X_i=1} = \pr{X_{i-1} = 1}
+        \, \left [ \pr{X_i =1 | X_{i-1} = 1}
+            - \pr{X_i =1 | X_{i-1} = 0} \right ]
+        + \pr{X_i =1 | X_{i-1} = 0}.
+\end{equation}
+Starting with
+\begin{equation}
+    \pr{X_2=1} = \pr{X_{1} = 1} \, \pr{X_2 =1 | X_1 = 1}
+               + \pr{X_{1} = 0} \, \pr{X_2 =1 | X_1 = 0},
+\end{equation}
+where everything is known, we can iterate using \eq{recurse} to find
+$\pr{X_i = 1}$ for each $i=1, \ldots, n$ in linear time.
 
 \end{document}
 

@@ -5,6 +5,20 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 
+\usepackage{listings}
+\lstset{language=Python,
+        basicstyle=\footnotesize\ttfamily,
+        showspaces=false,
+        showstringspaces=false,
+        tabsize=2,
+        breaklines=false,
+        breakatwhitespace=true,
+        identifierstyle=\ttfamily,
+        keywordstyle=\bfseries,
+        commentstyle=\it,
+        stringstyle=\it,
+    }
+
 \usepackage[pdftex]{graphicx}
 
 % header
@@ -127,6 +141,42 @@ probability that they have the disease given that they tested positive
 % === Problem 3 ===
 \section{Problem 3}
 
+The simplest possible cyclic directed graph is shown in \fig{cycle}. This
+graph implies the factorization
+\begin{equation}\eqlabel{crazy}
+    \pr{A,B} = \pr{A|B} \, \pr{B|A}.
+\end{equation}
+It is easy to construct an example that violates this. If $A$ and $B$ are
+binary valued, valid CPTs for these are something like
+\begin{equation}
+    \begin{array}{r | cc}
+        \pr{B | A} & A = 1 & A = 0 \\ \hline
+        B = 0 & 0.75 & 0.5 \\
+        B = 1 & 0.25 & 0.5
+    \end{array} \hspace{1cm} \mathrm{and} \hspace{1cm}
+    \begin{array}{r | cc}
+        \pr{A | B} & A = 1 & A = 0 \\ \hline
+        B = 0 & 0.1 & 0.9 \\
+        B = 1 & 0.8 & 0.2
+    \end{array}
+\end{equation}
+In this example, the factorization in \eq{crazy} implies the join
+distribution
+\begin{equation}
+    \begin{array}{r | cc}
+        \pr{A, B} & A = 1 & A = 0 \\ \hline
+        B = 0 & 0.075 & 0.45 \\
+        B = 1 & 0.2 & 0.1
+    \end{array}
+\end{equation}
+which is improper, i.e.~$\sum_{A,B} \pr{A,B} = 0.825 < 1$.
+
+\begin{figure}[hbtp]
+    \centering
+    \includegraphics[width=0.3\textwidth]{cycle.pdf}
+    \caption{The simplest cyclic directed graph. \figlabel{cycle}}
+\end{figure}
+
 % === Problem 4 ===
 \section{Problem 4}
 
@@ -194,8 +244,113 @@ because it would require that $E_1 \perp E_2$ but $E_1$ and $E_2$ are only
 % === Problem 6 ===
 \section{Problem 6}
 
+Since the variables $x$, $y$ and $z$ are interchangeable in this
+distribution, it is sufficient to show that none of the graphs in
+\fig{gm2} imply the same set of independences as the distribution.
+The joint distribution of $x$, $y$ and $z$ is
+\begin{equation}
+    \begin{array}{r|cccc}
+        Z = & 0 & 0 & 1 & 1 \\
+        X = & 0 & 1 & 0 & 1 \\\hline
+        Y = 0 & 1/12 & 1/6 & 1/6 & 1/12 \\
+            1 & 1/6 & 1/12 & 1/12 & 1/6 \\
+    \end{array}
+\end{equation}
+The first graph in \fig{gm2} implies the condition $X \perp Z | Y$ or,
+\begin{equation}
+    p(X,Y,Z) = p(X) \, p(Y | X) \, p (Z | Y).
+\end{equation}
+For our example, $p(X=1) = 1/2$, $p(Y = 1 | X =1) = 1/2$ and
+$p(Z = 1 | Y = 1) = 1/2$ while $p(X=1, Y=1, Z=1) = 1/6$ therefore,
+\begin{equation}
+    \frac{1}{6} \ne \frac{1}{2} \times \frac{1}{2} \times \frac{1}{2}.
+\end{equation}
+
+For the next graphs, it is important to note that $X$ and $Y$ are
+independent, i.e.
+\begin{equation}
+    \pr{X, Y} \stackrel{?}{=} \pr{X} \, \pr{Y}
+\end{equation}
+where $\pr{X = 1} = 1/2$, $\pr{Y = 1} = 1/2$ and
+$\pr{X=1,Y=1} = 1/4$ satisfy this equality.
+
+The second graph in
+\fig{gm2} also implies that
+\begin{equation}
+    \pr{X,Y,Z} = \pr{X} \, \pr{Y} \, \pr{Z | X,Y}
+\end{equation}
+but $\pr{Z = 1 | X = 1, Y = 1} = 2/3$ and $\pr{Z = 1, X = 1, Y = 1} = 1/6$
+so this condition is not satisfied by the distribution.
+
+For the third graph, the independence condition implied is
+\begin{equation}
+    \pr{X,Y,Z} = \pr{X} \, \pr{Y} \, \pr{Z | X}.
+\end{equation}
+We can try, for example, $\pr{Z = 1 | X = 1} = 1/4$ and
+$\pr{X=1,Y=1,Z=1} = 1/6$. Therefore, this condition is not satisfied
+since
+\begin{equation}
+    \frac{1}{6} \ne \frac{1}{2} \, \frac{1}{2} \, \frac{1}{4}.
+\end{equation}
+
+Finally, the fourth graph in \fig{gm2} is the easiest. It implies that this
+distribution factors as
+\begin{equation}
+    \pr{X,Y,Z} = \pr{X} \, \pr{Y} \, \pr{Z}
+\end{equation}
+but \pr{X=1}, \pr{Y=1} and \pr{Z=1} are all equal to $1/2$ and
+$\pr{X=1,Y=1,Z=1} = 1/6 \ne (1/2)^3$.
+
+Therefore, since none of these graphs represent the same independences
+as the distribution, no directed acyclic graph on 3 variables has
+$I_\mathrm{d-sep} (G) = I(p)$.
+
+\begin{figure}[hbtp]
+    \centering
+    \includegraphics[width=0.8\textwidth,%
+        trim=1.9cm 18cm 4.8cm 3cm,clip=true]{gm/gm2.pdf}
+    \caption{The four different graphs on 3 random variables. \figlabel{gm2}}
+\end{figure}
+
 % === Problem 7 ===
 \section{Problem 7}
+
+\paragraph{(a) and (b)}
+
+I will combine both parts for this question because I find it much easier
+to generate the tables given a physical intuition.
+
+\emph{Case 1:} $a > c$. The example for this one is that $X = 1$ means that
+the fire alarm in your house is broken and it has a relatively small
+prior probability $\pr{X=1} = 0.2$. Then, $Y=1$ indicates that there is
+currently a fire in your house and $Z=1$ says that you can hear the fire
+alarm going off. In this case, $\pr{X = 1|Z=1, Y=1} \sim 0$ because if the
+fire alarm is going off \emph{and} there is a fire then the probability
+that the alarm is broken is very small.
+
+\emph{Case 2:} $a < c < b$. In this case, an example would be that
+$X=1$ means that you are very intelligent, $Y = 1$ means that you
+work very hard and $Z = 1$ means that you pass this class. There is
+only a small prior probability that you are very intelligent ---
+$\pr{X=1} = 0.1$ --- but if you pass then there is a higher
+probability that you are very intelligent --- $\pr{X=1|Z=1} = 0.6$. In
+between, if you pass but you're also a very hard worker, it's slightly
+less likely that you're doing well based on your intelligence alone:
+$\pr{X=1|Z=1,Y=1} = 0.5$.
+
+\emph{Case 3:} $b < a < c$. A simple example satisfying this criterion is
+that $Z = (X==Y)$. If the prior probability of $X=1$ is $\pr{X=1} = 0.5$
+and the prior probability of $Y=1$ is $\pr{Y=1} = 0.01$ then,
+$b = \pr{X=1|Z=1} = \pr{X=1|Z=1,Y=1}\pr{Y=1} + \pr{X=1|Z=1,Y=0}\pr{Y=0} = 0.01$
+and $c = \pr{X=1|Z=1, Y=1} = 1$. The joint probability table is
+\begin{equation}
+    \begin{array}{r|cccc}
+        Z =   & 0   & 0     & 1    & 1 \\
+        X =   & 0   & 1     & 0    & 1 \\\hline
+        Y = 0 & 0   & 0.495 & 0.495 & 0 \\
+            1 & 0.005 & 0     & 0    & 0.005 \\
+    \end{array}
+\end{equation}
 
 % === Problem 8 ===
 \section{Problem 8}
@@ -215,6 +370,25 @@ no other active paths between $X_1$ and other nodes outside of $A$ --- this
 can be easily seen by trying them all.
 
 \paragraph{(b)}
+
+This algorithm generalizes as follows:
+\begin{itemize}
+    \item{Add all the children and parents of $X_i$ to $A$. As before,
+        these are all required connections because any direct connection
+        in the graph is an active path (i.e.~$X_i$ is never independent
+        of these variables).}
+    \item{This is not yet sufficient, however. If any of the children of
+        $X_i$ (say $Y$) have other parents then conditioning on $Y$ couples
+        $X_i$ to all of $Y$'s parents since it is a $V$-structure.
+        Therefore, all of the parents of $Y$ must be added to $A$.}
+    \item{This \emph{is} now sufficient because the neighbors of $X_i$'s
+        parents and the children of $X_i$'s children are all
+        conditionally independent of $X_i$, conditioned on $A$. This is
+        easily seen by looking at the possible active paths in these
+        directions and remembering that for a cascade structure, the
+        end nodes are conditionally independent of each other conditioned
+        on the middle node. This is also true for a common parent structure.}
+\end{itemize}
 
 % === Problem 9 ===
 \section{Problem 9}
@@ -268,6 +442,31 @@ the set $B$ is $\{ X_1, X_5, X_6 \}$.
 
 % === Problem 10 ===
 \section{Problem 10 --- Exercise 3.11}
+
+\paragraph{(a)}
+
+The left panel of \fig{gm3} shows graph from the problem and the right
+panel shows the marginalized graph.
+
+\paragraph{(b)}
+
+The general procedure is as follows: to marginalize over a node $A$,
+remove the node $A$ from the graph and draw edges directed from each
+of the parents of $A$ to each of the children of $A$.
+
+\paragraph{(c)}
+
+Applying this procedure to the naive Bayes model and marginalizing
+out the class variable will cause \emph{all} of the feature nodes to be
+independent, i.e.~$X_i \perp \chi - \{ X_i \}$.
+
+\begin{figure}[hbtp]
+    \centering
+    \includegraphics[width=0.8\textwidth,%
+        trim=1.9cm 18cm 4.8cm 3cm,clip=true]{gm/gm3.pdf}
+    \caption{\emph{Left}: the original graph. \emph{Right}: the graph
+        marginalized over $A$.\figlabel{gm3}}
+\end{figure}
 
 % === Problem 11 ===
 \section{Problem 11 --- Exercise 3.15}
@@ -346,12 +545,11 @@ Equating these two expressions, we find the expected Equation (3.8):
 Taking the logarithm of \eq{modcomp}, we find
 \begin{equation}
     \log \left [ \frac{\pr{c_1 | \bvec{x}}}{\pr{c_2 | \bvec{x}}} \right ]
-        = \log \left [ \frac{\pr{c_1}}{\pr{c_2}} \right ] \,
+        = \log \left [ \frac{\pr{c_1}}{\pr{c_2}} \right ] +
             \sum_{i=1}^n
             \left [ \log \pr{x_i | c_1} - \log \pr{x_i | c_2} \right ]
 \end{equation}
 
-{\bf ***Wording?}
 
 % === Problem 13 ===
 \section{Problem 13}
@@ -372,7 +570,77 @@ Starting with
                + \pr{X_{1} = 0} \, \pr{X_2 =1 | X_1 = 0},
 \end{equation}
 where everything is known, we can iterate using \eq{recurse} to find
-$\pr{X_i = 1}$ for each $i=1, \ldots, n$ in linear time.
+$\pr{X_i = 1}$ for each $i=1, \ldots, n$ in linear time. The pseudocode
+for this algorithm is shown here:
+
+\begin{lstlisting}
+
+    # given px[i,1,1] = p(X[i] = 1 | X[i-1] = 1)
+    # and px1[1] = p(X[1] = 1)
+
+    pxi1 = []
+
+    pxi1.push( px1[1] )
+
+    for i in 2...n:
+        pxi1.push( pxi1[-1] * (px[i,1,1] - px[i,1,0]) + px[i,1,0] )
+
+    # now, pxi1 contains a list of all the p(X[i] = 1)
+
+\end{lstlisting}
+
+\paragraph{(b)}
+
+Analogous to \eq{recurse}, the recursive form for the conditional
+probability is
+\begin{equation*}
+    \pr{X_i=1 | X_1 = 1} =
+        \pr{X_{i-1} = 1 | X_1 = 1}
+        \, \left [ \pr{X_i =1 | X_{i-1} = 1}
+            - \pr{X_i =1 | X_{i-1} = 0} \right ]
+        + \pr{X_i =1 | X_{i-1} = 0}.
+\end{equation*}
+and the algorithm is
+
+\begin{lstlisting}
+
+    pxi1 = []
+
+    pxi1.push( px[2,1,1] )
+
+    for i in 3...n:
+        pxi1.push( pxi1[-1] * (px[i,1,1] - px[i,1,0]) + px[i,1,0] )
+
+    # now, pxi1 contains a list of all the p(X[i] = 1 | X[1] = 1)
+
+\end{lstlisting}
+
+\paragraph{(c)}
+
+By Bayes,
+\begin{equation}
+    \pr{X_1 = 1 | X_i = 1} =
+        \frac{\pr{X_1 = 1} \, \pr{X_i = 1 | X_1 = 1}}{\pr{X_i=1}}
+\end{equation}
+Therefore, the algorithm becomes
+\begin{lstlisting}
+
+    px = []
+
+    pxi1  = px1[1] * (px[2,1,1] - px[2,1,0]) + px[2,1,0]
+    pcond = px[2,1,1]
+
+    px.push( px1[1] * pcond / pxi1 )
+
+    for i in 3...n:
+        pxi1  = pxi1  * (px[i,1,1] - px[i,1,0]) + px[i,1,0]
+        pcond = pcond * (px[i,1,1] - px[i,1,0]) + px[i,1,0]
+        px.push( px1[1] * pcond / pxi1 )
+
+    # now, pxi1 contains a list of all the p(X[1] = 1 | X[i] = 1)
+
+\end{lstlisting}
+This still scales linearly with $n$.
 
 \end{document}
 

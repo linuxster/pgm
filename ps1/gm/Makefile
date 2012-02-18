@@ -1,6 +1,6 @@
 include ../Makefile.inc
 
-NAME    = gm1
+NAME    = gm3
 DOC_OUT = ${NAME}.${SUFF}
 
 default: ${DOC_OUT}

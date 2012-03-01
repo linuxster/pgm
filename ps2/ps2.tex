@@ -1,0 +1,452 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{fancyhdr}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\usepackage{listings}
+\lstset{language=Python,
+        basicstyle=\footnotesize\ttfamily,
+        showspaces=false,
+        showstringspaces=false,
+        tabsize=2,
+        breaklines=false,
+        breakatwhitespace=true,
+        identifierstyle=\ttfamily,
+        keywordstyle=\bfseries,
+        commentstyle=\it,
+        stringstyle=\it,
+    }
+
+\usepackage[pdftex]{graphicx}
+
+% header
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\fancyhead[R]{Daniel Foreman-Mackey}
+\fancyhead[L]{Probabilistic Graphical Models --- Problem Set 2}
+\pagestyle{fancy}
+\setlength{\headsep}{20pt}
+
+% shortcuts
+\newcommand{\Eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eqlabel}[1]{\label{eq:#1}}
+\newcommand{\Fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\figlabel}[1]{\label{fig:#1}}
+
+% commands
+\newcommand{\pr}[1]{\ensuremath{p(#1)}}
+\newcommand{\no}[1]{\ensuremath{\tilde{#1}}}
+\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
+\renewcommand{\vector}[1]{\bvec{#1}}
+\renewcommand{\matrix}[1]{\ensuremath{#1}}
+\newcommand{\normal}[1]{\ensuremath{\mathcal{N}(#1)}}
+\newcommand{\lognormal}[1]{\ensuremath{\mathcal{L}(#1)}}
+\newcommand{\dirichlet}[1]{\ensuremath{\mathcal{D}(#1)}}
+\newcommand{\dd}{\ensuremath{\, \mathrm{d}}}
+
+\begin{document}
+
+\section{Problem 1}
+
+For this problem, I will call the random variables $A$, $B$, $C$ and $D$ for
+simpler notation. The graph structure $A-B-C-D-A$ implies that the distribution
+can be factorized as
+\begin{equation}
+    \pr{a,b,c,d} \propto \phi_{AB}(a,b) \, \phi_{BC}(b,c) \, \phi_{CD}(c,d) \,
+        \phi_{DA}(d,a) \quad .
+\end{equation}
+Therefore, in order for $\pr{0,1,1,0} = 0$, at least one of
+\begin{equation}
+    \phi_{AB}(0,1), \quad \phi_{BC}(1,1), \quad \phi_{CD}(1,0), \quad
+    \mathrm{or}\quad
+        \phi_{DA}(0,0)
+\end{equation}
+must be equal to zero. This is clearly not true since
+\begin{equation}
+    (i)\, \pr{0,1,1,1} \ne 0, \quad (ii)\, \pr{1,1,1,0} \ne 0\quad
+    \mathrm{and}\quad
+    (iii)\, \pr{0,0,0,0} \ne 0 \quad .
+\end{equation}
+Statement (i) implies that none of
+\begin{equation}
+    \phi_{AB}(0,1), \quad \phi_{BC}(1,1), \quad \phi_{CD}(1,1), \quad
+    \mathrm{or}\quad \phi_{DA}(1,0)
+\end{equation}
+can equal zero. Similarly, statement (ii) implies that none of
+\begin{equation}
+    \phi_{AB}(1,1), \quad \phi_{BC}(1,1), \quad \phi_{CD}(1,0), \quad
+    \mathrm{or}\quad \phi_{DA}(0,1)
+\end{equation}
+can equal zero. And finally, statement (iii) implies that none of
+\begin{equation}
+    \phi_{AB}(0,0), \quad \phi_{BC}(0,0), \quad \phi_{CD}(0,0), \quad
+    \mathrm{or}\quad \phi_{DA}(0,0)
+\end{equation}
+are zero. Therefore, by this contradicting example, the distribution cannot
+be factorized over the given graph structure.
+
+\section{Problem 2}
+
+\paragraph{(a)}
+
+A probability distribution over three discrete random variables $A$, $B$ and
+$C$ is parameterized as
+\begin{equation}
+    \pr{a,b,c} \propto \exp \left ( - \epsilon_1 (a,b) -
+        \epsilon_2 (b,c) \right ) \quad .
+\end{equation}
+If we redefine
+\begin{equation}
+    \epsilon_1^\prime (a,B=b^i) \gets \epsilon_1 (a,B=b^i) + \lambda^i \quad
+    \mathrm{and} \quad
+    \epsilon_2^\prime (B=b^i, c) \gets \epsilon_2 (B=b^i,c) - \lambda^i
+\end{equation}
+then the new distribution is
+\begin{eqnarray}
+    \pr{a,b^i,c} &\propto& \exp \left ( - \epsilon_1^\prime (a,b^i) -
+        \epsilon_2^\prime (b^i,c) \right ) \\
+    &=& \exp \left ( - \epsilon_1 (a,b^i) - \lambda^i -
+        \epsilon_2 (b^i,c) + \lambda^i \right ) \\
+    &=& \exp \left ( - \epsilon_1 (a,b^i) -
+        \epsilon_2 (b^i,c) \right )
+\end{eqnarray}
+which is equivalent to the original parameterization. Therefore, any
+symmetric reparameterization of the energy functions will leave the
+distribution unchanged.
+
+\paragraph{(b)}
+
+We would like to find $w_{ij}^\prime$ and $u_i^\prime$ such that
+\begin{equation}
+    p_\mathrm{Ising} \propto \exp \left ( - \sum_{i<j\in E}
+        w_{ij}^\prime \, z_i\, z_j - \sum_i u_i^\prime \, z_i \right )
+\end{equation}
+for $z_i = \pm 1$ is equivalent to
+\begin{equation}\eqlabel{bolt}
+    p_\mathrm{Boltzmann} \propto \exp \left ( - \sum_{i,j\in E}
+        w_{ij} \, x_i\, x_j - \sum_i u_i \, x_i \right )
+\end{equation}
+for $x_i \in \{0,1\}$. This can be easily achieved with the mapping
+$x_i \gets (z_i + 1)/2$. Substituting this into \eq{bolt}, we find
+\begin{eqnarray}
+    p_\mathrm{Boltzmann} &\propto& \exp \left ( - \sum_{i,j\in E}
+    \frac{w_{ij}}{4} \, (z_i\, z_j + z_i + z_j + 1)
+    - \sum_i \frac{u_i}{2} \, (z_i+1) \right )\\
+    &=& \exp \left ( - \sum_{i,j\in E}
+    \frac{w_{ij}}{4} \, z_i\, z_j - \sum_{i,j\in E}
+    \frac{w_{ij}}{4} \, (z_i+z_j)
+    - \sum_i \frac{u_i}{2} \, z_i - \sum_{i,j\in E} \frac{w_{ij}}{4}
+    - \sum_i \frac{u_i}{2} \right ) \quad .
+\end{eqnarray}
+The last two terms in this equation are constant so they can be absorbed into
+the partition function, leaving
+\begin{eqnarray}
+    p_\mathrm{Boltzmann} &\propto& \exp \left ( - \sum_{i,j\in E}
+    \frac{w_{ij}}{4} \, z_i\, z_j
+    - \sum_i \left [ \frac{u_i}{2} + \sum_{j\in E_i} \frac{w_{ij}}{4} \right ]
+        \, z_i \right )
+\end{eqnarray}
+where $E_i$ is the set of edges containing node $i$. Therefore, the correct
+mapping between the two distributions is
+\begin{equation}
+    w_{ij}^\prime = \frac{w_{ij}}{4} \quad \mathrm{and} \quad
+    u_i^\prime = \frac{u_i}{2} + \sum_{j\in E_i} \frac{w_{ij}}{4} \quad .
+\end{equation}
+
+
+\section{Problem 3}
+
+For a simple (non-pairwise) distribution on 3 random variables $A$, $B$ and
+$C$, factored according to
+\begin{equation}
+    \pr{a,b,c} \propto \phi_{ABC} (a,b,c) \quad ,
+\end{equation}
+we can introduce a new variable $D$ to convert it to the pairwise
+\begin{equation}
+    \pr{a,b,c,d} \propto \phi_{AD} (a,d) \, \phi_{BD} (b,d) \, \phi_{CD} (c,d)
+\end{equation}
+where
+\begin{eqnarray}
+    \pr{a,b,c} &=& \sum_i \pr{a,b,c,D=d^i} \\
+    \phi_{ABC} (a,b,c) &\propto& \sum_i
+        \phi_{AD} (a,D=d^i) \, \phi_{BD} (b,D=d^i) \, \phi_{CD} (c,D=d^i) \quad .
+\end{eqnarray}
+To determine the forms of the pairwise potentials, first, we can assert that
+$D$ assumes a tuple value $(d_1, d_2, \ldots)$
+with one entry for each connected node (i.e.~three in this example
+for $A$, $B$, and $C$). Then, the potentials will be
+\begin{equation}
+    \phi_{AD} (a,d) = \phi_{ABC} (a, d_2, d_3)
+\end{equation}
+with similar forms for the other edges.
+
+Following this example, the general procedure for \emph{one} particular
+non-pairwise potential will be
+\begin{equation}
+    \phi_{X} (\vector{x}) \to \prod_{i=1}^N \phi_{X_i, Y} (x_i, Y)
+\end{equation}
+where $Y$ is an $N$-tuple and
+\begin{equation}
+    \phi_{X_i, Y} (x_i, Y) = \phi_X (y_1, \ldots, y_{i-1}, x_i, y_{i+1} \ldots, y_N) \quad .
+\end{equation}
+
+\section{Problem 4: Exponential Families}
+
+\paragraph{(a)}
+
+\begin{enumerate}
+    \item{A multivariate Gaussian with identity covariance in $K$ dimensions
+        is part of the exponential family:
+        \begin{eqnarray}
+            \normal{\vector{x}; \vector{\mu}, \matrix{I}} &=& \frac{1}{(2\pi)^{K/2}} \,
+                \exp \left (-\frac{1}{2} \sum_{i=1}^{K} [x_i-\mu_i]^2 \right )
+                \\ &=& \frac{1}{(2\pi)^{K/2}} \, \exp \left (
+                    \sum_{i=1}^K \mu_i x_i - \frac{1}{2}\sum_{i=1}^K x_i^2
+                     - \frac{1}{2}\sum_{i=1}^K \mu_i^2
+                \right ) \quad .
+        \end{eqnarray}
+        Therefore, setting
+        $\vector{f}(\vector{x}) = (x_1, x_1^2, \ldots, x_K, x_K^2)^T$,
+        $\vector{\eta} = (\mu_1, -1/2, \ldots, \mu_K, -1/2)^T$,
+        $\ln Z = \sum\mu_i^2/2 + K \, \ln (2 \pi)/2$ and $h(\vector{x}) = 1$
+        puts this distribution in the correct form.
+    }
+    \item{The Dirichlet distribution in $K$ dimensions is
+        \begin{equation}
+            D (\vector{\theta}; \vector{\alpha}) = \frac{1}{Z(\vector{\alpha})}
+            \, \prod_{i=1}^{K} \theta_i^{\alpha_i - 1}
+        \end{equation}
+        where
+        \begin{equation}
+            Z(\vector{\alpha}) = \frac{\prod_{i=1}^K \Gamma (\alpha_i)}%
+            {\Gamma\left ( \prod_{i=1}^{K} \alpha_i \right )} \quad .
+        \end{equation}
+        This can be rewritten as
+        \begin{equation}
+            D (\vector{\theta}; \vector{\alpha}) =
+                \exp \left ( \sum_{i=1}^{K} [1-\alpha_i] \ln \theta_i
+                -\ln Z(\vector{\alpha}) \right ) \quad .
+        \end{equation}
+        This is clearly a member of the exponential family with
+        $\vector{f}(\vector{\theta}) = (\ln \theta_1, \ldots, \ln \theta_K)^T$,
+        $\vector{\eta} = (1-\alpha_1, \ldots, 1-\alpha_K)^T$ and
+        $h(\vector{\theta}) = 1$.
+    }
+    \item{The log-normal distribution is parameterized as
+        \begin{eqnarray}
+            \lognormal{y; 0, \sigma^2} &=&
+            \left | \frac{\dd \ln y}{\dd y} \right | \, \normal{\ln y; 0, \sigma^2}
+            \\ &=& \frac{1}{y \sqrt{2 \pi \sigma^2}} \,
+            \exp \left ( -\frac{[\ln y]^2}{2 \, \sigma^2} \right ) \quad .
+        \end{eqnarray}
+        Setting $f(y) = (\ln y)^2$, $\eta = -1/2\sigma^2$, $h(y) = y^{-1}$
+        and $Z = 1/\sqrt{2 \pi \sigma^2}$ shows that this is also a member of
+        the exponential family.
+    }
+    \item{The Boltzmann distribution can be written as
+        \begin{eqnarray}
+            \pr{\vector{x}} &=& \frac{1}{Z} \, \exp \left (
+                \sum_i u_i \, x_i + \sum_{i,j \in E} w_{ij} \, x_i\,x_j
+            \right )\\
+            &=& \frac{1}{Z} \, \exp \left (
+                \sum_i u_i \, x_i + \sum_{i,j \in E} w_{ij} \, x_i\,x_j
+                -\ln Z
+            \right ) \quad .
+        \end{eqnarray}
+        Therefore, we can set $\vector{\eta} = \{\vector{u}, \vector{w}\}$
+        where $\vector{w} = \{w_{ij}, \, \forall\, (i,j) \in E\}$ and
+        $\vector{f} (\vector{x}) = \{\vector{x}, \vector{\xi}\}$ where
+        $\vector{\xi} = \{x_i\,x_j, \, \forall\, (i,j) \in E\}$ to show
+        that this distribution can also be written in the form of a member
+        of the exponential family.
+    }
+\end{enumerate}
+
+\paragraph{(b)} For a continuous distribution, the partition function is
+given by
+\begin{equation}
+    Z(\vector{\eta}) = \int h(\vector{x}) \, \exp\left (
+        \vector{\eta} \cdot \vector{f} (\vector{x})\right ) \dd \vector{x}
+\end{equation}
+and the gradient with respect to \vector{\eta} is
+\begin{equation}
+    \nabla_\eta  Z(\vector{\eta}) = \int \vector{f} (\vector{x})
+        \, h(\vector{x}) \, \exp\left (
+        \vector{\eta} \cdot \vector{f} (\vector{x})\right ) \dd \vector{x}
+        \quad .
+\end{equation}
+Therefore, since
+\begin{eqnarray}
+    \nabla_\eta \ln Z(\vector{\eta}) &=& \frac{1}{Z(\vector{\eta})} \,
+        \nabla_\eta  Z(\vector{\eta})\\
+        &=& \int \vector{f}(\vector{x}) \, \pr{\vector{x}; \vector{\eta}}
+\end{eqnarray}
+where
+\begin{equation}
+    \pr{\vector{x}; \vector{\eta}} = h(\vector{x}) \, \exp \left (
+        \vector{\eta} \cdot \vector{f}(\vector{x}) - \ln Z(\vector{\eta})
+    \right ) \quad ,
+\end{equation}
+the result is immediately clear
+\begin{equation}
+    \nabla_\eta \ln Z(\vector{\eta})
+        = \int \vector{f}(\vector{x}) \, \pr{\vector{x}; \vector{\eta}}
+    = E_{\pr{x; \eta}} \left [ \vector{f} (\vector{x}) \right ] \quad .
+\end{equation}
+
+\paragraph{(c)} For the multivariate Gaussian in example 1, the log-partition
+function becomes
+\begin{equation}
+    \ln Z = \frac{1}{2} \sum_{i=1}^{K} \left [ \frac{\mu_i^2}{\sigma_i^2}
+    + \ln \sigma_i^2 + \ln 2\pi \right ]
+\end{equation}
+when we intorduce a diagonal covariance tensor
+$\vector{\Sigma} = \mathrm{Diag}(\sigma_1^2, \sigma_2^2,\ldots)$. Also,
+$\vector{\eta} \gets \{ \mu_i/\sigma_i^2, -1/2\sigma_i^2 \}
+= \{\alpha_i, \beta_i\}$ so the log partition function can be re-written
+\begin{equation}
+    \ln Z = \sum_i \left [ -\frac{\alpha_i^2}{4 \beta_i} +
+    \ln \left ( -\frac{1}{2 \beta_i} \right ) + \ln 2\pi\right ]
+\end{equation}
+Therefore, the derivative of $\ln Z$ with respect to
+$\alpha_i = \mu_i/\sigma_i^2$ is
+\begin{equation}
+    \frac{\dd \ln Z}{\dd \alpha_i} = -\frac{\alpha_i}{2\beta_i} = \mu_i = E[x_i]
+\end{equation}
+as expected and
+\begin{equation}
+    \frac{\dd \ln Z}{\dd \beta_i} = \frac{\alpha_i^2}{4 \beta_i^2}
+        -\frac{1}{2\beta_i} = \mu_i^2 + \sigma_i^2 = E[x_i^2] \quad .
+\end{equation}
+This verifies the claim that the gradient of the log partition function
+gives the expectaion values of $\vector{f} (\vector{x})$.
+
+\paragraph{(d)}
+
+Since
+\begin{equation}
+    \pr{Y=1|\vector{x}; \vector{\alpha}} =
+    \frac{1}{1+e^{-\vector{\alpha}\cdot\vector{x}}}
+\end{equation}
+for $\vector{x} = (1, x_1, x_2, \ldots, x_n)$, $\vector{\alpha} =
+(\alpha_0, \ldots, \alpha_n)$ and binary $Y$,
+\begin{equation}
+    \pr{Y=1|\vector{x}; \vector{\alpha}} = 1-
+    \frac{1}{1+e^{-\vector{\alpha}\cdot\vector{x}}}
+    = \frac{e^{-\vector{\alpha}\cdot\vector{x}}}%
+        {1+e^{-\vector{\alpha}\cdot\vector{x}}} \quad .
+\end{equation}
+Therefore,
+\begin{equation}
+    \pr{Y=y | \vector{x}; \vector{\alpha}} =
+    \frac{e^{(1-y) \, \vector{\alpha}\cdot\vector{x}}}{Z(\vector{\alpha},\vector{x})}
+\end{equation}
+where
+\begin{equation}
+    Z(\vector{\alpha},\vector{x}) = 1+e^{-\vector{\alpha}\cdot\vector{x}} \quad .
+\end{equation}
+Therefore, setting $\vector{f}(y, \vector{x}) = (1-y) \, \vector{x}$ and
+$h(\vector{x}, \vector{y}) = 1$, we see
+that this conditional distribution is part of the exponential family.
+
+\section{Problem 5: Conjugacy and Prediction}
+
+\paragraph{(a)} The Dirichlet distribution is
+\begin{equation}
+    \mathrm{Dir} (\vector{\theta} | \vector{\alpha})
+        \propto \prod_k \theta_k^{\alpha_k-1}
+\end{equation}
+and the Multinomial distribution is
+\begin{equation}
+    \mathrm{Mult} (\vector{x} | \vector{\theta}) \propto
+    \prod_k \theta_k^{x_k} \quad .
+\end{equation}
+Therefore, the posterior on \vector{\theta} is
+\begin{equation}
+    \pr{\vector{\theta}|\vector{x};\vector{\alpha}} \propto
+        \left ( \prod_k \theta_k^{x_k} \right )\,
+        \left ( \prod_k \theta_k^{\alpha_k-1} \right )
+        =  \prod_k \theta_k^{\alpha_k-1+x_k} \propto
+        \mathrm{Dir} (\vector{\theta} | \vector{\alpha} + \vector{x}) \quad .
+\end{equation}
+Therefore, the posterior given a single ``observation'' $\vector{x}$ is
+given by a Dirichlet with new hyperparameters. Given multiple, independent
+observations, this becomes
+\begin{equation}
+    \pr{\vector{\theta}|\{\vector{x}\};\vector{\alpha}} \propto
+    \prod_{i=1}^{N} \pr{\vector{\theta}|\vector{x}^{(i)};\vector{\alpha}}
+    = \prod_{i=1}^{N}
+        \mathrm{Dir} (\vector{\theta} | \vector{\alpha} + \vector{x}^{(i)})\quad .
+\end{equation}
+Now, to give the result in the notation of the problem,
+since $\vector{x}^{(i)}$ is zero everywhere except in one
+component where it equals one, the posterior can be written as a Dirichlet
+distribution with hyperparameters $\vector{\alpha}^\prime$ given by
+\begin{equation}
+    \alpha_k^\prime = \alpha_k + \sum_{i=1}^N \left \{ \begin{array}{ll}
+        1, & \mathrm{if} \, \vector{x}^{(i)}_k = 1 \\
+        0, & \mathrm{otherwise}
+    \end{array}\right .
+\end{equation} \quad .
+
+\paragraph{(b)} The joint posterior on $\vector{x}_\mathrm{new}$ and
+\vector{\theta} is
+\begin{equation}
+    \pr{\vector{x}_\mathrm{new}, \vector{\theta} | \{\vector{x}^{(i)}\}; \vector{\alpha}}
+     = \pr{\vector{x}_\mathrm{new} | \vector{\theta}} \, \pr{\vector{\theta} | \{\vector{x}^{(i)}\}; \vector{\alpha}}
+\end{equation}
+and this is given by
+\begin{equation}
+    \mathrm{Mult}(\vector{x}_\mathrm{new} | \vector{\theta}) \, \mathrm{Dir} (\vector{\theta} | \vector{\alpha}^\prime)
+    \sim \mathrm{Dir}(\vector{\theta} | \vector{\alpha}^{\prime\prime}) \quad .
+\end{equation}
+Integrating over \vector{\theta}, we get
+\begin{equation}
+    \pr{\vector{x}_\mathrm{new} | \{\vector{x}^{(i)}\}; \vector{\alpha}}
+    = \int \dd \vector{\theta} \, \pr{\vector{x}_\mathrm{new}, \vector{\theta} | \{\vector{x}^{(i)}\}; \vector{\alpha}}
+    = \frac{\prod_k \Gamma \left ( \alpha_k^\prime + x_{\mathrm{new},k} \right )}%
+    {\Gamma \left ( \sum_k [\alpha_k^\prime +x_{\mathrm{new},k} ] \right )} \quad .
+\end{equation}
+
+
+\section{Problem 6: Kullback-Leibler divergence}
+
+\paragraph{(a)}
+
+For a convex function $f(x)$, Jensen's inequality is
+\begin{equation}
+    E[f(x)] \ge f(E[x]) \quad .
+\end{equation}
+For our problem, we can define $y=q/p$ and $f(x) = -\log x$. Therefore,
+$E_p[y] = \sum p \frac{q}{p} = \sum q = 1$ and
+\begin{equation}
+    E_p[f(y)] = -\sum p \log \frac{q}{p} = \sum p \log \frac{p}{q}
+    \ge -\log \left ( E_p[y] \right ) = -\log(1) = 0 \quad .
+\end{equation}
+This proves that $D(p||q) \ge 0$. If $p=q$ then
+\begin{equation}
+    D(p||q) = \sum p \, \log \frac{p}{q} = \sum p \, \log 1 = \sum 0 = 0 \quad .
+\end{equation}
+If $p\ne q$ then $D(p||q) > 0$ since equality in Jensen's inequality holds
+only when $f(x)$ is not strictly convex (i.e. only when $p=q$). Therefore,
+$D(p||q) = 0$ if and only if $p=q$.
+
+\paragraph{(b)} The K--L divergence can be rewritten as
+\begin{equation}
+    D(p||q) = \sum p \, \log \frac{p}{q} =
+        \sum \left ( p \log p - p \log q \right ) = -H(p) - \sum p \log q \quad .
+\end{equation}
+Then, we can choose the uniform distribution $q = 1/k$ and find
+\begin{equation}
+    D(p||q) = -H(p) + \log k \, \sum p = -H(p) + \log k \ge 0 \to
+    \log k \ge H(p)
+\end{equation}
+with equality when $p = q = 1/k$.
+
+\end{document}
+

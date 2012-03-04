@@ -1,0 +1,32 @@
+network Simple {
+}
+variable A {
+  type discrete [ 2 ] { False, True };
+}
+variable C {
+  type discrete [ 2 ] { False, True };
+}
+variable B {
+  type discrete [ 3 ] { a, b, c };
+}
+variable D {
+  type discrete [ 3 ] { x, y, z };
+}
+probability ( A ) {
+  table 0.5, 0.5;
+}
+probability ( B | A ) {
+  ( False ) 0.01, 0.49, 0.0;
+  ( True ) 0.2, 0.2, 0.1;
+}
+probability ( D ) {
+  table 0.1, 0.3, 0.6;
+}
+probability ( C | A, D ) {
+  ( False, x ) 0.01, 0.01;
+  ( False, y ) 0.01, 0.01;
+  ( False, z ) 0.01, 0.01;
+  ( True, x ) 0.05, 0.08;
+  ( True, y ) 0.05, 0.08;
+  ( True, z ) 0.05, 0.08;
+}

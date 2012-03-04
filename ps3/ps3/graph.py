@@ -196,7 +196,7 @@ class Factor(Block):
                 s += "  ( %s ) "%(", ".join([str(i) for i in ind]))
                 s += ", ".join([str(self.evaluate(s, *ind))
                     for s in self.nodes[0].states])
-                s += "\n"
+                s += ";\n"
             s += "}\n"
         return s
 
@@ -220,6 +220,12 @@ class Factor(Block):
         ind = [slice(i,i+1) for i in ind[::-1]]
         return float(self.table[ind])
 
+def run_tests():
+    import os
+    fn = os.path.join(*(list(os.path.split(__file__)[:-2])+["data","test.bif"]))
+    print "Asserting validity of file:", fn
+    assert str(Network.from_file(fn)) == open(fn).read()
+
 if __name__ == '__main__':
-    print Network.from_file("ps3_data/alarm.bif")
+    run_tests()
 

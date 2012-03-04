@@ -43,9 +43,17 @@ class Network(Block):
         """Add a node to the network."""
         self.nodes[variable.name] = variable
 
+    def remove_node(self, variable):
+        self.nodes.pop(variable.name)
+
     def add_factor(self, factor):
         """Add a factor to the network."""
+        for n in factor.nodes:
+            assert n.name in self.nodes
         self.factors.append(factor)
+
+    def remove_factors(self, factors):
+        [self.factors.remove(f) for f in factors]
 
     def __str__(self):
         s = "network %s {\n"%(self.name)
@@ -141,6 +149,34 @@ class Network(Block):
 
         return network
 
+    def eliminate(self, variable):
+        node = self.nodes[variable]
+
+        # The factors involving `variable`.
+        factors = node.factors
+
+        # Get the other nodes that are involved.
+        nodes = []
+        for f in factors:
+            for n in f.nodes:
+                if n.name != variable and n not in nodes:
+                    nodes.append(n)
+
+        # Calculate the table for the new factor.
+        tab = np.zeros([len(n.states) for n in nodes[::-1]])
+        for ind in itertools.product(*[n.states for n in nodes]):
+            kwargs = dict([(nodes[i].name, ind[i]) for i in range(len(ind))])
+            mask = [n.states.index(ind[i]) for i,n in enumerate(nodes)]
+            mask = [slice(i,i+1) for i in mask[::-1]]
+            for s in node.states:
+                kwargs[variable] = s
+                tab[mask] += np.prod([f.evaluate(**kwargs) for f in factors])
+
+        new_factor = Factor(nodes, tab)
+        self.remove_node(node)
+        self.remove_factors(factors)
+        self.add_factor(new_factor)
+
 class Variable(Block):
     """
     A variable corresponds to a single node in a network.
@@ -157,6 +193,7 @@ class Variable(Block):
         super(Variable, self).__init__(**kwargs)
         self.name = name
         self.states = states
+        self.factors = []
 
     def __str__(self):
         s = "variable %s {\n"%(self.name)
@@ -164,6 +201,12 @@ class Variable(Block):
                 (len(self.states), ", ".join([str(s) for s in self.states]))
         s += "}\n"
         return s
+
+    def add_factor(self, factor):
+        self.factors.append(factor)
+
+    def remove_factor(self, factor):
+        self.factors.remove(factor)
 
 class Factor(Block):
     """
@@ -182,6 +225,9 @@ class Factor(Block):
     def __init__(self, nodes, table, **kwargs):
         super(Factor, self).__init__(**kwargs)
         self.nodes = nodes
+        self._node_names = [n.name for n in nodes]
+        for n in self.nodes: # Keep track of the scope of the variables.
+            n.add_factor(self)
         self.table = table
 
     def __str__(self):
@@ -200,7 +246,7 @@ class Factor(Block):
             s += "}\n"
         return s
 
-    def evaluate(self, *args):
+    def evaluate(self, *args, **kwargs):
         """
         Evaluate this factor for a particular set of values.
 
@@ -214,6 +260,13 @@ class Factor(Block):
         * `value` (float): The value of the factor at this position.
 
         """
+        if len(args) == 0:
+            args = [""]*len(self.nodes)
+            for k in kwargs:
+                try:
+                    args[self._node_names.index(k)] = kwargs[k]
+                except ValueError as e:
+                    pass
         assert len(args) == len(self.nodes)
         ind = [self.nodes[i].states.index(args[i]) for i in range(len(args))]
         # Don't forget that the indexing is in _reverse_ order.
@@ -227,5 +280,7 @@ def test_io():
     assert str(Network.from_file(fn)) == open(fn).read()
 
 if __name__ == '__main__':
-    run_tests()
+    net = Network.from_file("data/test.bif")
+    net.eliminate("A")
+    print net
 

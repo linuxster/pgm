@@ -220,7 +220,7 @@ class Factor(Block):
         ind = [slice(i,i+1) for i in ind[::-1]]
         return float(self.table[ind])
 
-def run_tests():
+def test_io():
     import os
     fn = os.path.join(*(list(os.path.split(__file__)[:-2])+["data","test.bif"]))
     print "Asserting validity of file:", fn

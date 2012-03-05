@@ -98,8 +98,8 @@ class Network(Block):
 
         network = None
         current_block = ""
-        # We'll keep track of the bracket level so that we can find the "current
-        # block" as we go through the file line-by-line.
+        # We'll keep track of the bracket level so that we can find the
+        # "current block" as we go through the file line-by-line.
         level = 0
 
         f = open(fn, "r")
@@ -113,7 +113,8 @@ class Network(Block):
                     network = cls(b_info)
                 elif b_type == "variable":
                     assert network is not None
-                    vals = _var_re.search(current_block).groups()[0].split(",")
+                    vals = _var_re.search(current_block).groups()[0]\
+                            .split(",")
                     var = Variable(b_info, [v.strip() for v in vals])
                     network.add_node(var)
                 elif b_type == "probability":
@@ -121,7 +122,8 @@ class Network(Block):
                     groups = _prob_re.search(b_info).groups()
                     var = [groups[0].strip()]
                     if groups[1] is None: # It's a prior probability table.
-                        tab = np.array([v for v in _table_re.search(current_block)\
+                        tab = np.array([v
+                            for v in _table_re.search(current_block)\
                                 .groups()[0].split(",")], dtype=float)
                         factor = Factor([network.nodes[var[0]]], tab)
                     else: # It's a conditional PDF.
@@ -138,7 +140,8 @@ class Network(Block):
                             ind = [nodes[i+1].states.index(p0.strip())
                                     for i,p0 in enumerate(p[0].split(","))]
                             # Yep. Don't ask.
-                            ind = [slice(i,i+1) for i in ind[::-1]]+[slice(nstates)]
+                            ind = [slice(i,i+1) for i in ind[::-1]]\
+                                    + [slice(nstates)]
                             tab[ind] = np.array(p[1].split(","), dtype=float)
                         factor = Factor(nodes, tab)
                     network.add_factor(factor)
@@ -172,10 +175,16 @@ class Network(Block):
                 kwargs[variable] = s
                 tab[mask] += np.prod([f.evaluate(**kwargs) for f in factors])
 
-        new_factor = Factor(nodes, tab)
+        # Normalize by the sum.
+        tab /= np.sum(tab)
+
+        # Remove all the factors.
         self.remove_node(node)
         self.remove_factors(factors)
-        self.add_factor(new_factor)
+        [n.remove_factors(factors) for n in nodes]
+
+        # Add the new factor.
+        self.add_factor(Factor(nodes, tab))
 
 class Variable(Block):
     """
@@ -205,8 +214,12 @@ class Variable(Block):
     def add_factor(self, factor):
         self.factors.append(factor)
 
-    def remove_factor(self, factor):
-        self.factors.remove(factor)
+    def remove_factors(self, factors):
+        for f in factors:
+            try:
+                self.factors.remove(f)
+            except ValueError:
+                pass
 
 class Factor(Block):
     """
@@ -265,7 +278,7 @@ class Factor(Block):
             for k in kwargs:
                 try:
                     args[self._node_names.index(k)] = kwargs[k]
-                except ValueError as e:
+                except ValueError:
                     pass
         assert len(args) == len(self.nodes)
         ind = [self.nodes[i].states.index(args[i]) for i in range(len(args))]
@@ -282,5 +295,7 @@ def test_io():
 if __name__ == '__main__':
     net = Network.from_file("data/test.bif")
     net.eliminate("A")
+    net.eliminate("C")
+    net.eliminate("D")
     print net
 

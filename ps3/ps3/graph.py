@@ -201,14 +201,27 @@ class Network(Block):
 
             # Induce the fill edges.
             for e in fills[min_fill]:
-                edges[e[0]].append(e[1])
-                edges[e[1]].append(e[0])
+                if e[0] in unmarked and e[1] in unmarked:
+                    edges[e[0]].append(e[1])
+                    edges[e[1]].append(e[0])
 
             # Mark the chosen node.
             unmarked.remove(min_fill)
             order.append(min_fill)
             # print dict(map(lambda x: (x, len(fills[x])), fills))
-        return order
+
+        max_clique = edges[max(edges, key=lambda e: len(edges[e]))]
+
+        self._order = order
+        return order, max_clique
+
+    @property
+    def order(self):
+        """Lazily calculate the elimination order."""
+        try:
+            return self._order
+        except AttributeError:
+            return self.greedy_ordering()[0]
 
     def eliminate(self, variable):
         node = self.nodes[variable]
@@ -238,6 +251,19 @@ class Network(Block):
 
         # Add the new factor.
         self.add_factor(Factor(nodes, tab))
+
+    def query(self, q, evidence={}):
+        for k in evidence:
+            self.nodes[k].add_evidence(evidence[k])
+        for n in order:
+            if n not in q:
+                net.eliminate(n)
+        print self.nodes[q[0]]
+        for f in self.factors:
+            print f.table
+            print f.evaluate()
+        print self.factors
+        # print res
 
 class Variable(Block):
     """
@@ -366,16 +392,18 @@ def test_io():
 
 if __name__ == '__main__':
     net = Network.from_file("data/alarm.bif")
+    order, max_clique = net.greedy_ordering()
 
     print "Elimination Ordering"
-    print " -> ".join(net.greedy_ordering())
-    for n in net.greedy_ordering()[:-1]:
-        net.eliminate(n)
-    print net
-    # print net.count_fill_edges("A")
-    # net.nodes["A"].add_evidence("False")
-    # net.eliminate("D")
-    # net.eliminate("B")
-    # net.eliminate("A")
-    # print net
+    print " -> ".join(order)
+
+    print "\nWith induced max-clique:"
+    print " - ".join(max_clique)
+    print
+
+    e = {"HYPOVOLEMIA": "TRUE", "ERRCAUTER": "TRUE", "PVSAT": "NORMAL",
+            "DISCONNECT": "TRUE", "MINVOLSET": "LOW"}
+    q = ["STROKEVOLUME"]
+
+    net.query(q, e)
 

@@ -37,14 +37,16 @@ class Network(Block):
         super(Network, self).__init__(**kwargs)
         self.name = name
         self.nodes = {}
+        self.inactive_nodes = {}
         self.factors = []
+        self.inactive_factors = []
 
     def add_node(self, variable):
         """Add a node to the network."""
         self.nodes[variable.name] = variable
 
     def remove_node(self, variable):
-        self.nodes.pop(variable.name)
+        self.inactive_nodes[variable.name] = self.nodes.pop(variable.name)
 
     def add_factor(self, factor):
         """Add a factor to the network."""
@@ -53,7 +55,8 @@ class Network(Block):
         self.factors.append(factor)
 
     def remove_factors(self, factors):
-        [self.factors.remove(f) for f in factors]
+        self.inactive_factors += \
+                [self.factors.pop(self.factors.index(f)) for f in factors]
 
     def __str__(self):
         s = "network %s {\n"%(self.name)
@@ -152,18 +155,68 @@ class Network(Block):
 
         return network
 
+    def _get_set_of_nodes(self, factors, variable=None):
+        nodes = []
+        for f in factors:
+            for n in f.nodes:
+                if (variable is None or n.name != variable)\
+                        and n not in nodes:
+                    nodes.append(n)
+        return nodes
+
+    def greedy_ordering(self):
+        unmarked = self.nodes.keys()
+        factors = [f._node_names for f in self.factors]
+
+        # Loop over the factors to collect which edges already exist.
+        edges = {}
+        for f in factors:
+            for n in f:
+                try:
+                    edges[n] = edges[n] | set(f)
+                except KeyError:
+                    edges[n] = set(f)
+        for k in edges:
+            edges[k] = list(edges[k] - set(k))
+
+        # An inline function to calculate the induced fill edges for all the
+        # nodes.
+        def get_fill_edges():
+            fills = {}
+            for k in unmarked:
+                fills[k] = []
+                for i in range(len(edges[k])):
+                    for j in range(i+1, len(edges[k])):
+                        if edges[k][i] not in edges[edges[k][j]]:
+                            fills[k] += [[edges[k][i], edges[k][j]]]
+            return fills
+
+        order = []
+        while len(unmarked) > 0:
+            # Get the list of fill edges induced by each node.
+            fills = get_fill_edges()
+
+            # This gets the _first_ min-fill node.
+            min_fill = min(fills, key=lambda x: len(fills[x]))
+
+            # Induce the fill edges.
+            for e in fills[min_fill]:
+                edges[e[0]].append(e[1])
+                edges[e[1]].append(e[0])
+
+            # Mark the chosen node.
+            unmarked.remove(min_fill)
+            order.append(min_fill)
+            # print dict(map(lambda x: (x, len(fills[x])), fills))
+        return order
+
     def eliminate(self, variable):
         node = self.nodes[variable]
 
         # The factors involving `variable`.
         factors = node.factors
-
         # Get the other nodes that are involved.
-        nodes = []
-        for f in factors:
-            for n in f.nodes:
-                if n.name != variable and n not in nodes:
-                    nodes.append(n)
+        nodes = self._get_set_of_nodes(factors, variable)
 
         # Calculate the table for the new factor.
         tab = np.zeros([len(n.states) for n in nodes[::-1]])
@@ -221,6 +274,9 @@ class Variable(Block):
             except ValueError:
                 pass
 
+    def add_evidence(self, state):
+        [f.add_evidence(self, state) for f in self.factors]
+
 class Factor(Block):
     """
     A factor quantifies the connections between nodes in a network.
@@ -242,15 +298,22 @@ class Factor(Block):
         for n in self.nodes: # Keep track of the scope of the variables.
             n.add_factor(self)
         self.table = table
+        self.evidence = {}
 
     def __str__(self):
+        names = []
+        for n in self.nodes:
+            if n.name in self.evidence:
+                names.append("%s = %s"%(n.name, self.evidence[n.name]))
+            else:
+                names.append(n.name)
         if len(self.nodes) == 1:
             s = "probability ( %s ) {\n  table %s;\n}\n"%\
-                (self.nodes[0].name,
-                 ", ".join([str(v) for v in self.table]))
+                (names[0],
+                 ", ".join([str(self.evaluate(s))
+                     for s in self.nodes[0].states]))
         else:
-            s = "probability ( %s | %s ) {\n"%(self.nodes[0].name,
-                      ", ".join([v.name for v in self.nodes[1:]]))
+            s = "probability ( %s | %s ) {\n"%(names[0], ", ".join(names[1:]))
             for ind in itertools.product(*[n.states for n in self.nodes[1:]]):
                 s += "  ( %s ) "%(", ".join([str(i) for i in ind]))
                 s += ", ".join([str(self.evaluate(s, *ind))
@@ -281,10 +344,19 @@ class Factor(Block):
                 except ValueError:
                     pass
         assert len(args) == len(self.nodes)
+        for i,a in enumerate(args):
+            try:
+                if a != self.evidence[self._node_names[i]]:
+                    return 0.0
+            except KeyError:
+                pass
         ind = [self.nodes[i].states.index(args[i]) for i in range(len(args))]
         # Don't forget that the indexing is in _reverse_ order.
         ind = [slice(i,i+1) for i in ind[::-1]]
         return float(self.table[ind])
+
+    def add_evidence(self, node, state):
+        self.evidence[node.name] = state
 
 def test_io():
     import os
@@ -293,9 +365,17 @@ def test_io():
     assert str(Network.from_file(fn)) == open(fn).read()
 
 if __name__ == '__main__':
-    net = Network.from_file("data/test.bif")
-    net.eliminate("A")
-    net.eliminate("C")
-    net.eliminate("D")
+    net = Network.from_file("data/alarm.bif")
+
+    print "Elimination Ordering"
+    print " -> ".join(net.greedy_ordering())
+    for n in net.greedy_ordering()[:-1]:
+        net.eliminate(n)
     print net
+    # print net.count_fill_edges("A")
+    # net.nodes["A"].add_evidence("False")
+    # net.eliminate("D")
+    # net.eliminate("B")
+    # net.eliminate("A")
+    # print net
 

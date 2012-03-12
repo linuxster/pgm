@@ -1,4 +1,5 @@
 # encoding: utf-8
+# dummy
 """
 Object oriented graph structure code
 

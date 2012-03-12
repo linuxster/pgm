@@ -40,6 +40,7 @@ class Network(Block):
         self.inactive_nodes = {}
         self.factors = []
         self.inactive_factors = []
+        self.extra_factors = []
 
     def add_node(self, variable):
         """Add a node to the network."""
@@ -51,12 +52,23 @@ class Network(Block):
     def add_factor(self, factor):
         """Add a factor to the network."""
         for n in factor.nodes:
-            assert n.name in self.nodes
+            assert n.name in self.nodes, n.name
+            n.add_factor(factor)
         self.factors.append(factor)
 
     def remove_factors(self, factors):
         self.inactive_factors += \
                 [self.factors.pop(self.factors.index(f)) for f in factors]
+
+    def reset(self):
+        [self.inactive_nodes[k].reset() for k in self.inactive_nodes]
+        [self.add_node(self.inactive_nodes[k]) for k in self.inactive_nodes]
+        self.inactive_nodes = {}
+        [self.add_factor(f) for f in self.inactive_factors]
+        self.inactive_factors = []
+        [self.factors.pop(self.factors.index(f)) for f in self.extra_factors]
+        self.extra_factors = []
+        [f.reset() for f in self.factors]
 
     def __str__(self):
         s = "network %s {\n"%(self.name)
@@ -177,7 +189,12 @@ class Network(Block):
                 except KeyError:
                     edges[n] = set(f)
         for k in edges:
-            edges[k] = list(edges[k] - set(k))
+            edges[k] = list(edges[k] - set((k,)))
+
+        # Count the total number of edges
+        nfill = 0
+        for k in edges:
+            nfill -= 0.5*len(edges[k])
 
         # An inline function to calculate the induced fill edges for all the
         # nodes.
@@ -212,8 +229,13 @@ class Network(Block):
 
         max_clique = edges[max(edges, key=lambda e: len(edges[e]))]
 
+        # Count the number of edges in the induced graph and compare that
+        # to the original.
+        for k in edges:
+            nfill += 0.5*len(edges[k])
+
         self._order = order
-        return order, max_clique
+        return order, max_clique, nfill
 
     @property
     def order(self):
@@ -227,7 +249,10 @@ class Network(Block):
         node = self.nodes[variable]
 
         # The factors involving `variable`.
-        factors = node.factors
+        factors = []
+        for f in self.factors:
+            if variable in f._node_names:
+                factors.append(f)
         # Get the other nodes that are involved.
         nodes = self._get_set_of_nodes(factors, variable)
 
@@ -250,7 +275,9 @@ class Network(Block):
         [n.remove_factors(factors) for n in nodes]
 
         # Add the new factor.
-        self.add_factor(Factor(nodes, tab))
+        f = Factor(nodes, tab)
+        self.add_factor(f)
+        self.extra_factors.append(f)
 
     def query(self, q, evidence={}):
         for k in evidence:
@@ -258,12 +285,17 @@ class Network(Block):
         for n in order:
             if n not in q:
                 net.eliminate(n)
-        print self.nodes[q[0]]
-        for f in self.factors:
-            print f.table
-            print f.evaluate()
-        print self.factors
-        # print res
+
+        # Combine the remaining factors and normalize
+        nodes = [self.nodes[n] for n in q]
+        tab = {}
+        for ind in itertools.product(*[n.states for n in nodes]):
+            d = dict(zip(q, ind))
+            tab[ind] = np.prod([f.evaluate(**d) for f in self.factors])
+        Z = np.sum([tab[k] for k in tab])
+        for k in tab:
+            tab[k] /= Z
+        return tab
 
 class Variable(Block):
     """
@@ -282,6 +314,7 @@ class Variable(Block):
         self.name = name
         self.states = states
         self.factors = []
+        self.inactive_factors = []
 
     def __str__(self):
         s = "variable %s {\n"%(self.name)
@@ -289,6 +322,12 @@ class Variable(Block):
                 (len(self.states), ", ".join([str(s) for s in self.states]))
         s += "}\n"
         return s
+
+    def __hash__(self):
+        return self.name
+
+    def reset(self):
+        self.factors = []
 
     def add_factor(self, factor):
         self.factors.append(factor)
@@ -321,8 +360,6 @@ class Factor(Block):
         super(Factor, self).__init__(**kwargs)
         self.nodes = nodes
         self._node_names = [n.name for n in nodes]
-        for n in self.nodes: # Keep track of the scope of the variables.
-            n.add_factor(self)
         self.table = table
         self.evidence = {}
 
@@ -347,6 +384,12 @@ class Factor(Block):
                 s += ";\n"
             s += "}\n"
         return s
+
+    def __hash__(self):
+        return "-".join(self.names)
+
+    def reset(self):
+        self.evidence = {}
 
     def evaluate(self, *args, **kwargs):
         """
@@ -391,19 +434,59 @@ def test_io():
     assert str(Network.from_file(fn)) == open(fn).read()
 
 if __name__ == '__main__':
-    net = Network.from_file("data/alarm.bif")
-    order, max_clique = net.greedy_ordering()
+    print "PGM (Fall 2012) --- Problem Set 3"
+    print "=== ===========     ============="
+    print
+    print "Problem 1"
+    print "======= ="
 
-    print "Elimination Ordering"
+    net = Network.from_file("data/alarm.bif")
+    order, max_clique, nfill = net.greedy_ordering()
+
+    print "(a) Elimination Ordering"
+    print "--- ----------- --------"
     print " -> ".join(order)
 
-    print "\nWith induced max-clique:"
-    print " - ".join(max_clique)
     print
+    print "... which adds %d edges"%nfill
 
+    print
+    print "(b) Induced Max-Clique (%d)"%(len(max_clique))
+    print "--- ------- ---------- ----"
+    print " - ".join(max_clique)
+
+    print
+    print "Queries"
+    print "-------"
+
+    def my_query(v, e):
+        q = v.keys()
+        print "Pr ( " + ", ".join("%s = %s"%(k, v[k]) for k in q) + " |",
+        print ", ".join("%s = %s"%(k,e[k]) for k in e) + " )",
+        p = net.query(q, e)[tuple((v[k] for k in q))]
+        print "= %.4f"%p
+        net.reset()
+
+    print "(c)",
     e = {"HYPOVOLEMIA": "TRUE", "ERRCAUTER": "TRUE", "PVSAT": "NORMAL",
             "DISCONNECT": "TRUE", "MINVOLSET": "LOW"}
-    q = ["STROKEVOLUME"]
+    q = {"STROKEVOLUME": "HIGH"}
+    my_query(q, e)
 
-    net.query(q, e)
+    print "(d)",
+    e = {"LVEDVOLUME": "NORMAL", "ANAPHYLAXIS": "FALSE", "PRESS": "ZERO",
+            "VENTTUBE": "ZERO", "BP": "HIGH"}
+    q = {"HRBP": "NORMAL"}
+    my_query(q, e)
+
+    print "(e)",
+    e = {"HYPOVOLEMIA": "TRUE", "MINVOLSET": "LOW", "VENTLUNG": "NORMAL",
+            "BP": "NORMAL"}
+    q = {"STROKEVOLUME": "HIGH"}
+    my_query(q, e)
+
+    print "(f)",
+    e = {"LVEDVOLUME": "HIGH", "ANAPHYLAXIS": "FALSE", "PRESS": "ZERO"}
+    q = {"PVSAT": "NORMAL", "CVP": "NORMAL"}
+    my_query(q, e)
 

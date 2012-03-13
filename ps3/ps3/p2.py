@@ -48,29 +48,61 @@ class Node(object):
 
     def get_leaves(self):
         if len(self.children) == 0:
-            return [self.variable]
+            return [self]
         r = []
         for k in self.children:
             r += self.children[k][0].get_leaves()
         return r
 
+    def up_message(self):
+        try:
+            return self._up_message
+        except AttributeError:
+            self._up_message = self.upward_pass()
+            return self._up_message
+
     def upward_pass(self):
         if len(self.children) == 0:
-            print "leaf:", self.variable, "<-", self.parent[0].variable
             return self.psi
         m = np.ones(2)
         for k in self.children:
-            m *= self.children[k][0].upward_pass()
+            m *= self.children[k][0].up_message()
         message = self.psi[None,:] * m[:,None]
         if self.parent is not None:
              message *= self.parent[1]
         message = np.sum(message, axis=0)
-        print self.variable,
-        if self.parent is not None:
-            print "<-", self.parent[0].variable
-        else:
-            print
         return message/np.sum(message)
+
+    def down_messages(self):
+        try:
+            return self._down_messages
+        except AttributeError:
+            self._down_messages = self.downward_pass()
+            return self._down_messages
+
+    def downward_pass(self):
+        if self.parent is not None:
+            dm = self.parent[0].down_messages()
+            m_par = dm[str(self.variable)]
+        else:
+            m_par = np.ones(2)
+        if len(self.children) == 0:
+            m = np.sum(self.psi[None,:] * m_par, axis=0)
+            return m/np.sum(m)
+        m = dict([(k, m_par) for k in self.children])
+        for k in self.children:
+            for j in self.children:
+                if j != k:
+                    m[k] *= self.children[j][0].up_message()
+            m[k] = self.psi[None,:] * m[k][:,None] * self.children[k][1]
+            m[k] = np.sum(m[k], axis=0)
+            m[k] /= np.sum(m[k])
+
+        return m
+
+    def full_pass(self):
+        for n in self.get_leaves():
+            n.down_messages()
 
 def read_uai(fn, root_var):
     f = open(fn)
@@ -119,5 +151,5 @@ def read_uai(fn, root_var):
 
 if __name__ == '__main__':
     root = read_uai("data/kitchen.uai", 85)
-    print root.upward_pass()
+    root.full_pass()
 

@@ -1,6 +1,6 @@
 # encoding: utf-8
 """
-Object oriented graph structure code
+Problem 1 of problem set 3 of PGM (Spring 2012).
 
 """
 

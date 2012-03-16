@@ -282,9 +282,9 @@ class Network(Block):
     def query(self, q, evidence={}):
         for k in evidence:
             self.nodes[k].add_evidence(evidence[k])
-        for n in order:
+        for n in self.order:
             if n not in q:
-                net.eliminate(n)
+                self.eliminate(n)
 
         # Combine the remaining factors and normalize
         nodes = [self.nodes[n] for n in q]
@@ -433,7 +433,7 @@ def test_io():
     print "Asserting validity of file:", fn
     assert str(Network.from_file(fn)) == open(fn).read()
 
-if __name__ == '__main__':
+def main():
     print "PGM (Fall 2012) --- Problem Set 3"
     print "=== ===========     ============="
     print
@@ -464,7 +464,7 @@ if __name__ == '__main__':
         print "Pr ( " + ", ".join("%s = %s"%(k, v[k]) for k in q) + " |",
         print ", ".join("%s = %s"%(k,e[k]) for k in e) + " )",
         p = net.query(q, e)[tuple((v[k] for k in q))]
-        print "= %.4f"%p
+        print "= %.4e"%p
         net.reset()
 
     print "(c)",
@@ -489,4 +489,9 @@ if __name__ == '__main__':
     e = {"LVEDVOLUME": "HIGH", "ANAPHYLAXIS": "FALSE", "PRESS": "ZERO"}
     q = {"PVSAT": "NORMAL", "CVP": "NORMAL"}
     my_query(q, e)
+
+    print
+
+if __name__ == '__main__':
+    main()
 

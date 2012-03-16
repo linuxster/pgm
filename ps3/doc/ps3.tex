@@ -4,6 +4,7 @@
 
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{url}
 
 \usepackage{listings}
 \lstset{language=Python,
@@ -28,7 +29,7 @@
 \fancyhead[R]{Daniel Foreman-Mackey}
 \fancyhead[L]{Probabilistic Graphical Models --- Problem Set 3}
 \pagestyle{fancy}
-\setlength{\headsep}{20pt}
+\setlength{\headsep}{25pt}
 
 % shortcuts
 \newcommand{\Eq}[1]{Equation (\ref{eq:#1})}
@@ -47,7 +48,103 @@
 
 \begin{document}
 
-My code is implemented in \code{Python}
+My code is implemented in \code{Python} and it depends on the
+\code{Numpy}\footnote{\url{http://numpy.scipy.org}} package for vector
+math support. The code has been tested using \code{Python v2.7} with
+\code{Numpy v1.6.1} on \code{Mac OS X 10.6} but it should work with somewhat
+earlier versions of \code{Python} and \code{Numpy} on any system.
+
+The main code is implemented in the \code{ps3} module with the code in
+\code{ps3/p1.py} and \code{ps3/p2.py} for problems 1 and 2 respectively.
+You can run both of these by simply running
+\begin{lstlisting}
+    python run.py
+\end{lstlisting}
+at the command line.
+
+The answers to the questions are below.
+
+\section{Problem 1}
+
+\paragraph{(a)} The elimination ordering found is: PAP $\to$ EXPCO2 $\to$
+HREKG $\to$ CVP $\to$ BP $\to$ MINVOLSET $\to$
+ERRLOWOUTPUT $\to$ FIO2 $\to$ PRESS $\to$ HRBP $\to$ MINVOL $\to$ HRSAT $\to$
+INSUFFANESTH $\to$ HISTORY $\to$ DISCONNECT $\to$ ANAPHYLAXIS $\to$ PCWP
+$\to$ HYPOVOLEMIA $\to$ KINKEDTUBE $\to$ ERRCAUTER $\to$ VENTMACH $\to$
+PULMEMBOLUS $\to$ LVFAILURE $\to$ CO $\to$ CATECHOL $\to$ SHUNT $\to$ PVSAT
+LVEDVOLUME $\to$ VENTALV $\to$ VENTTUBE $\to$ STROKEVOLUME $\to$ VENTLUNG
+$\to$ ARTCO2 $\to$ SAO2 $\to$ TPR $\to$ HR $\to$ INTUBATION.
+This ordering adds 12 fill-edges.
+
+\paragraph{(b)} The induced width of the graph given this ordering is 13
+because the largest clique has 13 members. This largest clique contains:
+VENTLUNG, VENTALV, SHUNT, VENTTUBE, MINVOL, KINKEDTUBE, PRESS, PULMEMBOLUS,
+SAO2, PVSAT, ARTCO2, TPR and HR.
+
+\vspace{1cm}
+\noindent
+{\bf Using this ordering, I evaluated the following queries:}
+
+\paragraph{(c)}
+    \emph{p} ( STROKEVOLUME = HIGH $|$ MINVOLSET = LOW, HYPOVOLEMIA = TRUE,
+        DISCONNECT = TRUE, ERRCAUTER = TRUE, PVSAT = NORMAL )
+        = $1.000\times10^{-2}$
+
+\paragraph{(d)}
+    \emph{p} ( HRBP = NORMAL $|$ PRESS = ZERO, LVEDVOLUME = NORMAL, BP = HIGH,
+        ANAPHYLAXIS = FALSE, VENTTUBE = ZERO )
+        = $5.654 \times 10^{-2}$
+
+\paragraph{(e)}
+    \emph{p} ( STROKEVOLUME = HIGH $|$ MINVOLSET = LOW, VENTLUNG = NORMAL,
+    HYPOVOLEMIA = TRUE, BP = NORMAL ) = $7.186 \times 10^{-3}$
+
+\paragraph{(f)}
+    \emph{p} ( CVP = NORMAL, PVSAT = NORMAL $|$ PRESS = ZERO, LVEDVOLUME =
+    HIGH, ANAPHYLAXIS = FALSE ) = $6.920\times 10^{-3}$
+
+\clearpage
+
+\section{Problem 2}
+
+\subsection{The kitchen scene}
+
+\paragraph{(a)} The following objects are present in the kitchen image
+according to their MAP assignment: armchair, bag, bars, bookcase, books,
+cabinet, countertop, cupboard, curtain, door, drawer, fence, fireplace,
+microwave, mountain, pillow, plant, pot, refrigerator, rug, shoes, sink,
+sofa, stove, towel, truck and window.
+
+\paragraph{(b)} The objects with $\pr{b_i=1|s} \ge 0.8$ are: armchair, bag,
+bars, books, cabinet, countertop, cupboard, curtain, door, drawer, fence,
+fireplace, mountain, pillow, plant, pot, refrigerator, rug, shoes, sink,
+sofa, stove, towel, truck and window.
+
+\paragraph{(c)} Besides the objects listed in part (b) above, bookcase and
+microwave were also deemed present in the image with $\pr{b_i=1|s} \ge 0.6$.
+
+
+\subsection{The office scene}
+
+\paragraph{(a)} The following objects are present in the office image
+according to their MAP assignment:
+armchair, bag, balcony, bars, bed, bookcase, books, box, boxes, bread,
+cabinet, chair, cushion, desk, door, drawer, fence, handrail, microwave,
+mirror, mountain, pillow, plant, pot, rug, screen, shoes, showcase, sink,
+sofa, staircase, stool, stove, television, toilet, towel, tray and window.
+
+
+\paragraph{(b)} The objects with $\pr{b_i=1|s} \ge 0.8$ are:
+armchair, bag, balcony, bars, bed, bookcase, books, box, boxes, bread,
+cabinet, chair, cushion, desk, door, drawer, fence, handrail, microwave,
+mirror, mountain, pillow, plant, pot, rug, screen, shoes, showcase, sink,
+sofa, staircase, stool, stove, television, toilet, towel, tray and window.
+
+
+\paragraph{(c)} Besides the objects listed in part (b) above, no other
+objects have $\pr{b_i=1|s} \ge 0.6$.
+
+
 
 \end{document}
 

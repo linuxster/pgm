@@ -1,0 +1,121 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{fancyhdr}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+\usepackage{listings}
+\lstset{language=Python,
+        basicstyle=\footnotesize\ttfamily,
+        showspaces=false,
+        showstringspaces=false,
+        tabsize=2,
+        breaklines=false,
+        breakatwhitespace=true,
+        identifierstyle=\ttfamily,
+        keywordstyle=\bfseries,
+        commentstyle=\it,
+        stringstyle=\it,
+    }
+
+\usepackage[pdftex]{graphicx}
+
+% header
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\fancyhead[R]{Daniel Foreman-Mackey}
+\fancyhead[L]{Probabilistic Graphical Models --- Problem Set 4}
+\pagestyle{fancy}
+\setlength{\headsep}{25pt}
+
+% shortcuts
+\newcommand{\Eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eqlabel}[1]{\label{eq:#1}}
+\newcommand{\Fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\figlabel}[1]{\label{fig:#1}}
+
+% commands
+\newcommand{\pr}[1]{\ensuremath{p(#1)}}
+\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\dd}{\ensuremath{\, \mathrm{d}}}
+
+\newcommand{\code}[1]{{\sffamily #1}}
+
+\begin{document}
+
+My code is implemented in \code{Python} and it depends on the
+\code{Numpy}\footnote{\url{http://numpy.scipy.org}} package for vector
+math support. The code has been tested using \code{Python v2.7} with
+\code{Numpy v1.6.1} on \code{Mac OS X 10.6} but it should work with somewhat
+earlier versions of \code{Python} and \code{Numpy} on any system.
+
+All the code is implemented in \code{mplp.py} and you can run it to generate
+the output files by running
+\begin{lstlisting}
+    python mplp.py
+\end{lstlisting}
+at the command line.
+
+\section{Problem 1}
+
+For the kitchen image, my code converged after 61 iterations and the list of
+objects detected is:
+\code{cupboard}, \code{dishwasher}, \code{floor}, \code{refrigerator},
+\code{stove} and \code{wall}.
+
+For the office scene, it converged after 58 iterations and detected
+\code{floor} and \code{wall}.
+
+I know that there is something wrong with my implementation because I never
+reach an integrality gap of zero.
+
+\newpage
+\section{Problem 2}
+
+For ``2dri'', I also never reached an integrality gap of zero but the best
+solution that I reached (after 103 iterations), was:
+
+\begin{lstlisting}
+  1  0  0  0  0  0  0  0  0  0  0  1  2  1  0  2  0  0  2  6  0  0  0  2  0
+ 10  0  0  0  0  0  0  4  0  0  0  0  0  5  1  2  0  0  0  0  2  0  0  0  0
+  2  0  0  2  0  0  0  0  2  3  0  1  1  0  0  1  0  4  0  0  1  0  0  0  0
+  0  4  0  7  0  0  2  0  0  0  0  4  0  3 31 15  0  5  0  0  0  0  0  3  5
+  0  0  4  0  1  0  0  0  0  2  0  0  0  0  2  0  0  0  2  0  0  0  0  0  1
+  0  0  1  1  3  0  2  0  0  4  3  0  0  0  3  1  0  1  0  0  4  4  0  0  0
+  0  0  0  2  1  0  0  0  2  0  0  0  1  3  1 10  0  0  0  2  0  0 12  1  0
+  0  0  0  0  0  0  1  1  2  0  0  3  0 13  3  0  4  2  0  0  0  0  0  0  0
+  0  1  0  0  0  3  0  2  0  7  0  0  0  0  0  0  2  0  0  0  0  2  0  0  0
+  1  0  0  1  0  0  0  1  0  2  0  1  6  1  0  0  0 32  0  0  3  1  0  3  1
+  0  0  5  0  0  0  0  0  0  0  3  0  0  0  0  0  0  0  0  1  0
+\end{lstlisting}
+
+For ``1exm'', I found the optimum after 109 iterations with an integrality
+gap of 42. The best assignment was:
+
+\begin{lstlisting}
+  0  1  0  0  0  0  8  0  1  1  0  0  0  6  0  0  0  1  0  3  0 15  5  0  1
+  2  0  0  0  4  1  0  1  0  0 11  3  0  0  0  0  2  3  3  0  0  1  0  3 12
+  0  0  0  3  0  0  3  0  0  0  0  0  3  0  3  0  5  1  2  2  0  1 12  4  1
+  0  2  0  1  0  0  0  0  0  4  0  0  0  0  7  0  1  0  0  0  3  7  0  0  0
+  1  0  0  0  2  0  0  0  0  0  4  0  1  1  0  3  1  0  0  2  0 30 11  0  0
+  0  0  0  0  0  0  1  2  4  0  0  3  0  0  0  0  1  1  1  1  0  0  0  0  0
+  0  0  4  0  3  0  0  0  1  0  0  0  0  0  0  2  0  0  1  5  0  0  0  1  3
+  0  1  0  4  0  2  0  1  0  0  2  1  0  0  0  7  4  6  0  0  3  1  2  3  0
+  0  0  0  0  0  0  2  0  0  6  1  0 30  3  0  0  1  0  0  0  1  0  0 16  0
+  2  0  1  0  0  0 12  0  2  1  0  4  0 35  0  8  3  0  0  0  6  0  0  0  1
+  0  6  0  0  0  0  0  0  0  5  2  0  0  0  0  1  0  0  0 13  5  1  0  0  2
+  0  2  0  0  0  0  0  1  0  0  0  0  0  2  0  0  2  4  0  1  2  0 34  0  1
+  0  2  0  0  0  0  1  3  0  0  0  1  0  0  2  0  0  0  3  0  0  0 12  0  1
+  0  0  5  2  0  0  1  0  1  0  8  4  0  2  0  0  0  0  0  0  0  0  0  0  0
+  0  2  0  0  0  0  0  0  1  0  0  0  0  2  0  0  1  0  0  0  0  0  0  0  0
+  0  0  0  0  3  0  0  3  0  0  0 27  7  0  0 20  2  0  0  0  0  1  0  0  0
+  0  0  0
+\end{lstlisting}
+
+\end{document}
+

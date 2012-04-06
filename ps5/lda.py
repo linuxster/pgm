@@ -51,77 +51,20 @@ class LDA(object):
 
         # The actually per-word topics are initially chosen to be random.
         # NOTE: `z.shape = (nwords,)`
-        self.z = self.random.randint(len(self.alpha), size=len(self.w))
-
-    # @property
-    # def words(self):
-    #     """
-    #     Return the list of words that appear in the generated documents.
-
-    #     """
-    #     if len(self._words) == 0:
-    #         return self.w
-    #     r = []
-    #     for m in range(self.w.shape[0]):
-    #         r.append([])
-    #         for n in range(self.w.shape[1]):
-    #             r[-1].append(self._words[self.w[m,n]])
-    #     return r
-
-    # def initialize(self, M, N):
-    #     """
-    #     Set up the model to get ready for sampling.
-
-    #     """
-    #     self.theta = np.ones(M)/float(M)
-    #     self.z     = np.zeros([M, N], dtype=int)
-    #     self.w     = np.zeros([M, N], dtype=int)
-
-    # def generate_theta(self, M):
-    #     """
-    #     Sample the topic distribution from the Dirichlet distribution and
-    #     save its state.
-
-    #     """
-    #     self.theta = self._random.dirichlet(self.alpha, size=M)
-    #     return self.theta
-
-    # def generate_topics(self, M, N):
-    #     """
-    #     Draw topic samples from the sample distribution.
-
-    #     """
-    #     for m in range(M):
-    #         for n in range(N):
-    #             mask = self._random.multinomial(1, self.theta[m, :])
-    #             v = np.arange(self.theta.shape[1])[mask == 1]
-    #             self.z[m, n] = int(v)
-
-    # def generate_words(self, M, N):
-    #     for m in range(M):
-    #         for n in range(N):
-    #             mask = self._random.multinomial(1, self.beta[self.z[m, n],:])
-    #             v = np.arange(self.beta.shape[1])[mask == 1]
-    #             self.w[m, n] = int(v)
-
-    # def generate(self, M, N):
-    #     """
-    #     Generate `M` documents with `N` words each sampled from the LDA with
-    #     the given `alpha` and `beta` values.
-
-    #     """
-    #     self.initialize(M, N)
-    #     self.generate_theta(M)
-    #     self.generate_topics(M, N)
-    #     self.generate_words(M, N)
+        self.z = self._random.randint(len(self.alpha), size=len(self.w))
 
     def sample_theta(self):
-        alpha2 = np.sum(np.sum(self.z[:,:,None] == \
-                np.arange(len(self.alpha))[None,None,:], axis=0), axis=0)
+        alpha2 = self.alpha+np.sum(self.z[:,None] == \
+                np.arange(len(self.alpha))[None,:], axis=0)
+        alpha2 /= np.sum(alpha2)
         self.theta = self._random.dirichlet(alpha2)
 
     def sample_topics(self):
-        pass
+        alpha2 = self.beta[:, self.w] * self.alpha[:, None]
+        alpha2 /= np.sum(alpha2, axis=0)[None, :]
+        for k in range(alpha2.shape[1]):
+            mask = self._random.multinomial(1, alpha2[:,k]) == 1
+            self.z[k] = int(np.arange(len(self.alpha))[mask])
 
     def gibbs_sample(self, iterations):
         """
@@ -129,10 +72,6 @@ class LDA(object):
         using Gibbs sampling.
 
         """
-        self.w = np.atleast_2d(np.arange(self.beta.shape[1])).T
-
-        self.initialize(*self.beta.shape)
-
         for i in xrange(iterations):
             self.sample_theta()
             self.sample_topics()
@@ -140,5 +79,5 @@ class LDA(object):
 if __name__ == '__main__':
     lda = LDA(fn="data/abstract_nips21_NIPS2008_0517.txt.ready")
 
-    # lda.gibbs_sample(1)
+    lda.gibbs_sample(100)
 

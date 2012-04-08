@@ -11,6 +11,7 @@ For: Probabilistic Graphical Models @ NYU 2012
 __all__ = ["LDA"]
 
 import numpy as np
+import scipy.special as sp
 
 class LDA(object):
     """
@@ -109,11 +110,13 @@ class LDA(object):
         * `topics` (numpy.ndarray): The sampled topics with shape `(nwords,)`.
 
         """
-        alpha2 = self.beta[:, self.w] * self.alpha[:, None]
+        # NOTE: `alpha2.shape = (ntopics, nwords)`
+        alpha2 = self.beta[:, self.w] * self.theta[:, None]
         alpha2 /= np.sum(alpha2, axis=0)[None, :]
-        for k in range(alpha2.shape[1]):
-            mask = self._random.multinomial(1, alpha2[:,k]) == 1
-            self.z[k] = int(np.arange(len(self.alpha))[mask])
+        inds = np.arange(len(self.alpha))
+        self.z = np.array([int(
+                        inds[self._random.multinomial(1, alpha2[:,n]) == 1])
+                for n in range(len(self.w))])
         return self.z
 
     def gibbs(self, iterations, burnin=50):
@@ -127,10 +130,9 @@ class LDA(object):
 
         ## Returns
 
-        * `thetas` (numpy.ndarray): The samples of the `theta` distribution.
-          This will have the shape `(iterations, ntopics)`.
-        * `topics` (numpy.ndarray): The samples of the `z` distribution.
-          This will have the shape `(iterations, nwords)`.
+        * `thetas` (numpy.ndarray): The samples of the cumulative expectation
+          value for the `theta` distribution. This will have the shape
+          `(iterations-burnin, ntopics)`.
 
         """
         # Make sure that each algorithm starts from a similar first guess.
@@ -144,16 +146,73 @@ class LDA(object):
             thetas[i,:] = self._sample_theta()
             topics[i,:] = self._sample_topics()
 
-        return thetas[burnin:, :], topics[burnin:, :]
+        # Calculate the _cumulative_ expectation value of `theta`.
+        thetas = np.cumsum(thetas[burnin:], axis=0)\
+                / (np.arange(iterations-burnin) + 1)[:, None]
 
-    def collapsed_gibbs(self, iterations, burnin=50):
+        return thetas
+
+    def _approx_theta(self, topics):
+        """
+        Used by the collapsed Gibbs algorithm to estimate the expectation
+        value of `theta` given a set of `z` samples.
+
+        ## Arguments
+
+        * `topics` (numpy.ndarray): The list of topic samples. This object
+          should have the shape `(T, nwords)`, where `T` is the number of
+          samples.
+
+        ## Returns
+
+        * `theta` (numpy.ndarray): The estimated `theta` with length
+          `ntopics`.
+
+        """
+        T = topics.shape[0]
+        tmp = np.sum(topics[:, :, None] \
+                == np.arange(len(self.alpha))[None, None, :], axis=1)
+        theta = T * self.alpha + np.sum(tmp, axis=0)
+        theta /= T * (np.sum(self.alpha) + len(self.z))
+        return theta
+
+    def collapsed_gibbs(self, iterations, burnin=50, get_theta=True):
+        """
+        Run the collapsed Gibbs sampling algorithm for a given number of
+        iterations.
+
+        ## Arguments
+
+        * `iterations` (int): The number of iterations to run.
+
+        ## Keyword Arguments
+
+        * `burnin` (int): The number of iterations to discard from the
+          beginning of the chain. (default: 50)
+        * `get_theta` (bool): Flag indicating whether or not the expectation
+          value of `theta` will be calculated at each step in the chain. The
+          default is `True` and otherwise, it will only be returned for the
+          final step.
+
+        ## Returns
+
+        * `theta` (numpy.ndarray): If `get_theta` was true, this will return
+          an array of shape `(iterations-burnin-1, ntopics)` with the
+          _cumulative_ expectation value of `theta` as a function of
+          iterations. Otherwise it will only return the _final_ estimated
+          expectation value of `theta` (i.e. a list of length `ntopics`).
+
+        """
         # Make sure that each algorithm starts from a similar first guess.
         self.reset()
 
-        thetas = np.zeros((iterations-burnin-1, len(self.alpha)))
+        if get_theta:
+            thetas = np.zeros((iterations-burnin-1, len(self.alpha)))
         topics = np.zeros((iterations, len(self.w)))
 
         for i in xrange(iterations):
+            if not get_theta and i%500 == 0:
+                print "Collapsed Gibbs: Iteration #%d"%i
             # Unfortunately, I think that we need to run the Gibbs sampling
             # in _series_ for the `z`s because they are *not* conditionally
             # independent. Slow!
@@ -170,17 +229,35 @@ class LDA(object):
                 self.z[n] = int(np.arange(len(self.alpha))[mask])
             topics[i,:] = self.z
 
-            if i > burnin:
-                # A little bit of magic to calculate `E[theta]`.
-                T = i - burnin
-                tmp = np.sum(topics[burnin:i, :, None] \
-                        == np.arange(len(self.alpha))[None, None, :], axis=1)
-                theta = T * self.alpha + np.sum(tmp, axis=0)
-                theta /= T * (np.sum(self.alpha) + len(self.z))
+            if get_theta and i > burnin:
+                thetas[i-burnin-1, :] = self._approx_theta(topics[burnin:i])
 
-                thetas[T-1, :] = theta
+        if not get_theta:
+            return self._approx_theta(topics[burnin:])
 
-        return thetas, topics[burnin:,:]
+        return thetas
+
+    def variational(self, maxiter=500, tol=0):
+        k, N  = len(self.alpha), len(self.w)
+        phi   = np.ones((N, k), dtype=float) / k
+        gamma = self.alpha + float(N)/k
+
+        thetas = np.zeros((maxiter, k))
+
+        for iteration in xrange(maxiter):
+            phi = self.beta[:, self.w].T * np.exp(sp.psi(gamma))[None,:]
+            phi /= np.sum(phi, axis=1)[:, None]
+            gamma2 = self.alpha + np.sum(phi, axis=0)
+
+            delta = np.sum(np.abs(gamma-gamma2))
+
+            gamma = gamma2
+            thetas[iteration,:] = gamma/np.sum(gamma)
+
+            if delta <= tol:
+                break
+
+        return thetas[:iteration]
 
 if __name__ == '__main__':
     import sys
@@ -189,50 +266,40 @@ if __name__ == '__main__':
     lda = LDA(fn="data/abstract_nips21_NIPS2008_0517.txt.ready")
 
     if "--truth" in sys.argv:
-        theta, z = lda.collapsed_gibbs(500, burnin=50)
-        true_th = theta[-1,:]
+        print "Generating truth.txt using collapsed Gibbs sampling..."
+        theta = lda.collapsed_gibbs(10000, burnin=50, get_theta=False)
+        true_th = np.array(theta)
         f = open("truth.txt", "w")
         f.write(" ".join(["%e"%th for th in true_th]))
         f.close()
     else:
         true_th = np.array(open("truth.txt").readline().split(), dtype=float)
 
-    print "Finished truth..."
-    print np.argsort(true_th)[::-1]
+    burnin = 50
 
-    burnin = 1
+    plot_l2 = lambda theta, fmt, label: \
+            pl.plot(np.arange(theta.shape[0]),
+                    np.sum((theta-true_th[None, :])**2, axis=1), fmt,
+                    lw=2, label=label)
 
-    theta, z = lda.collapsed_gibbs(100, burnin=burnin)
+    print "Running collapsed Gibbs sampling..."
+    theta = lda.collapsed_gibbs(1000, burnin=burnin)
+    plot_l2(theta, "-k", "Collapsed Gibbs")
 
-    pl.plot(np.sum((theta-true_th[None, :])**2, axis=1))
+    print "Running standard Gibbs sampling..."
+    theta = lda.gibbs(1000, burnin=burnin)
+    plot_l2(theta, "--k", "Standard Gibbs")
 
-    theta, z = lda.gibbs(100, burnin=burnin)
+    print "Running variational LDA..."
+    theta = lda.variational()
+    plot_l2(theta, ":k", "Variational")
 
-    # Compute the cumulative expectation value of `theta` given the Gibbs
-    # chain.
-    e_th = np.cumsum(theta, axis=0)/(np.arange(theta.shape[0]) + 1)[:, None]
+    pl.legend()
+    pl.xlabel(r"$\mathrm{iterations}$", fontsize=14)
+    pl.ylabel(r"$L_2$", fontsize=14)
 
-    pl.plot(np.sum((e_th-true_th[None, :])**2, axis=1))
+    pl.yscale("log")
+    pl.xscale("log")
 
-    # pl.yscale("log")
-
-    pl.show()
-
-    # mu = np.mean(theta, axis=0)
-    # print np.argsort(mu)[::-1]
-
-    # pl.plot(mu)
-
-    # pl.figure()
-
-    # for i in range(theta.shape[-1]):
-    #     mask = theta[:,i] > 0
-    #     y, x = np.histogram(theta[mask, i], 50, normed=True)
-
-    #     pl.plot(0.5*(x[1:]+x[:-1]), np.log10(y), "k", alpha=0.5)
-
-    # pl.ylabel(r"$\log_{10} \, \rho (\theta_k)$", fontsize=16.)
-    # pl.xlabel(r"$\theta_k$", fontsize=16.)
-
-    # pl.show()
+    pl.savefig("results.pdf")
 

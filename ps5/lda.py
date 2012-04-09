@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Latent Dirichlet allocation.
 
@@ -211,8 +210,6 @@ class LDA(object):
         topics = np.zeros((iterations, len(self.w)))
 
         for i in xrange(iterations):
-            if not get_theta and i%500 == 0:
-                print "Collapsed Gibbs: Iteration #%d"%i
             # Unfortunately, I think that we need to run the Gibbs sampling
             # in _series_ for the `z`s because they are *not* conditionally
             # independent. Slow!
@@ -237,12 +234,22 @@ class LDA(object):
 
         return thetas
 
-    def variational(self, maxiter=500, tol=0):
+    def variational(self, maxiter=500, tol=1e-8):
+        """
+        Run the mean-field algorithm based on Blei, Ng & Jordan (2003).
+
+        ## Keyword Arguments
+
+        * `maxiter` (int): The maximum number of trials to run.
+        * `tol` (float): The convergence criterion on `sum(abs(gamma-gamma0))`.
+
+        """
         k, N  = len(self.alpha), len(self.w)
         phi   = np.ones((N, k), dtype=float) / k
         gamma = self.alpha + float(N)/k
 
-        thetas = np.zeros((maxiter, k))
+        thetas = np.zeros((maxiter+1, k))
+        thetas[0,:] = gamma/np.sum(gamma)
 
         for iteration in xrange(maxiter):
             phi = self.beta[:, self.w].T * np.exp(sp.psi(gamma))[None,:]
@@ -252,18 +259,18 @@ class LDA(object):
             delta = np.sum(np.abs(gamma-gamma2))
 
             gamma = gamma2
-            thetas[iteration,:] = gamma/np.sum(gamma)
+            thetas[iteration+1,:] = gamma/np.sum(gamma)
 
             if delta <= tol:
                 break
 
-        return thetas[:iteration]
+        return thetas[:iteration+1]
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
     import matplotlib.pyplot as pl
 
-    lda = LDA(fn="data/abstract_nips21_NIPS2008_0517.txt.ready")
+    lda = LDA(fn="data/abstract_nips20_NIPS2007_0879.txt.ready")
 
     if "--truth" in sys.argv:
         print "Generating truth.txt using collapsed Gibbs sampling..."

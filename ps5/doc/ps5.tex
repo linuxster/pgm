@@ -1,0 +1,71 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{fancyhdr}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+\usepackage{listings}
+\usepackage{color}
+\lstset{language=Python,
+        basicstyle=\footnotesize\ttfamily,
+        showspaces=false,
+        showstringspaces=false,
+        tabsize=2,
+        breaklines=false,
+        breakatwhitespace=true,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941},
+    }
+
+\usepackage[pdftex]{graphicx}
+
+% header
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\fancyhead[R]{Daniel Foreman-Mackey}
+\fancyhead[L]{Probabilistic Graphical Models --- Problem Set 5}
+\pagestyle{fancy}
+\setlength{\headsep}{10pt}
+\setlength{\headheight}{20pt}
+
+% shortcuts
+\newcommand{\Eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eqlabel}[1]{\label{eq:#1}}
+\newcommand{\Fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\figlabel}[1]{\label{fig:#1}}
+
+% commands
+\newcommand{\pr}[1]{\ensuremath{p(#1)}}
+\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\dd}{\ensuremath{\, \mathrm{d}}}
+
+\newcommand{\code}[1]{{\sffamily #1}}
+
+\begin{document}
+
+My code is implemented in \code{Python} and it depends on the
+\code{Numpy}\footnote{\url{http://numpy.scipy.org}} package for vector
+math support. The code has been tested using \code{Python v2.7} with
+\code{Numpy v1.6.1} on \code{Mac OS X 10.6} but it should work with somewhat
+earlier versions of \code{Python} and \code{Numpy} on any system.
+
+All the code is implemented in \code{mplp.py} and you can run it to generate
+the output files by running
+\begin{lstlisting}
+    python mplp.py
+\end{lstlisting}
+at the command line.
+
+\newpage
+
+\lstinputlisting[language=Python]{../lda.py}
+
+\end{document}
+

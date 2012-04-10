@@ -209,18 +209,19 @@ class LDA(object):
             thetas = np.zeros((iterations-burnin-1, len(self.alpha)))
         topics = np.zeros((iterations, len(self.w)))
 
+        K = len(self.alpha)
+        N = len(self.z)
+
         for i in xrange(iterations):
             # Unfortunately, I think that we need to run the Gibbs sampling
             # in _series_ for the `z`s because they are *not* conditionally
             # independent. Slow!
-            for n, zn in enumerate(self.z):
+            for n in range(len(self.z)):
                 m = np.arange(len(self.z)) != n
                 inds = np.arange(len(self.alpha))[:,None]
                 Nk = np.sum(self.z[m][None,:] == inds, axis=1)
                 a = Nk + self.alpha
-
                 b = self.beta[:, self.w[n]]
-
                 p = a*b/np.sum(a*b)
                 mask = self._random.multinomial(1, p) == 1
                 self.z[n] = int(np.arange(len(self.alpha))[mask])
@@ -270,7 +271,7 @@ if __name__ == "__main__":
     import sys
     import matplotlib.pyplot as pl
 
-    lda = LDA(fn="data/abstract_nips20_NIPS2007_0879.txt.ready")
+    lda = LDA(fn="data/abstract_nips21_NIPS2008_0517.txt.ready")
 
     if "--truth" in sys.argv:
         print "Generating truth.txt using collapsed Gibbs sampling..."

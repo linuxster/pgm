@@ -283,7 +283,7 @@ if __name__ == "__main__":
     else:
         true_th = np.array(open("truth.txt").readline().split(), dtype=float)
 
-    burnin = 50
+    burnin = 0
 
     plot_l2 = lambda theta, fmt, label: \
             pl.plot(np.arange(theta.shape[0]),

@@ -1,0 +1,106 @@
+\documentclass[11pt]{article}
+\usepackage{fullpage}
+\usepackage{fancyhdr}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{url}
+
+\usepackage{listings}
+\usepackage{color}
+\lstset{language=Python,
+        basicstyle=\footnotesize\ttfamily,
+        showspaces=false,
+        showstringspaces=false,
+        tabsize=2,
+        breaklines=false,
+        breakatwhitespace=true,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941},
+    }
+
+\usepackage[pdftex]{graphicx}
+
+% header
+\fancyhead{}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\fancyhead[R]{Daniel Foreman-Mackey}
+\fancyhead[L]{Probabilistic Graphical Models --- Problem Set 6}
+\pagestyle{fancy}
+\setlength{\headsep}{10pt}
+\setlength{\headheight}{20pt}
+
+% shortcuts
+\newcommand{\Eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eq}[1]{Equation (\ref{eq:#1})}
+\newcommand{\eqlabel}[1]{\label{eq:#1}}
+\newcommand{\Fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\fig}[1]{Figure \ref{fig:#1}}
+\newcommand{\figlabel}[1]{\label{fig:#1}}
+
+\newcommand{\pr}[1]{\ensuremath{p\left (#1 \right )}}
+\newcommand{\lk}[1]{\ensuremath{\mathcal{L} \left ( #1 \right )}}
+\newcommand{\bvec}[1]{\ensuremath{\boldsymbol{#1}}}
+\newcommand{\dd}{\ensuremath{\, \mathrm{d}}}
+\newcommand{\normal}[2]{\ensuremath{\mathcal{N} \left ( #1; #2 \right ) }}
+
+\newcommand{\data}{\mathcal{D}}
+
+\newcommand{\code}[1]{{\sffamily #1}}
+
+
+\begin{document}
+
+\section{HMM with mixture model emissions}
+
+\paragraph{(a)} The mixture model emission probability
+\begin{equation}
+    \pr{\bvec{y}_i | q_i} = \sum_{j = 1}^M b_{q_i,j}
+        \, \normal{\bvec{y}_i}{\bvec{\mu}_{q_i,j}, \Sigma_{q_i,j}}
+\end{equation}
+can be rewritten as the marginalized likelihood
+\begin{equation}
+    \pr{\bvec{y}_i | q_i} = \sum_{z_i = 1}^{M} \pr{z_i | q_i}
+        \, \pr{\bvec{y}_i | z_i, q_i}
+\end{equation}
+where
+\begin{equation}
+    \pr{z_i | q_i} = \prod_{m=1}^{M} b_{q_i,m}^{1[z_i = m]}
+\end{equation}
+and
+\begin{equation}
+    \pr{\bvec{y}_i | z_i, q_i} = \prod_{m=1}^{M} \left [
+        \normal{\bvec{y}_i}{\bvec{\mu}_{q_i,j}, \Sigma_{q_i,j}}
+    \right ] ^{1[z_i = m]} \quad .
+\end{equation}
+Using this parameterization, the full joint distribution over
+$\bvec{Y} = \{\bvec{y}_i\}$, $\bvec{Z} = \{z_i\}$ and $\bvec{Q}=\{q_i\}$---%
+parameterized by
+$\bvec{\theta}=\{\pi_k,A_{kl},b_{km},\mu_{km},\Sigma_{km}\}$---is
+\begin{eqnarray}
+    \pr{\bvec{Y}, \bvec{Z}, \bvec{Q};\bvec{\theta}} & = &
+        \pr{q_0} \, \left [ \prod_{i=1}^T \pr{q_i | q_{i-1}} \right ]
+        \left [ \prod_{i=0}^T \pr{z_i | q_i} \, \pr{\bvec{y}_i | z_i, q_i}
+        \right ] \nonumber \\
+    &=& \prod_{k=1}^{K} \left \{ \pi_k^{1[q_0=k]} \left [ \prod_{i=1}^T
+        \prod_{l=1}^{K} A_{kl}^{1[q_i=k,q_{i-1}=l]} \right ]
+        \left [ \prod_{i=0}^T \prod_{m=1}^M \left [ b_{km} \,
+            \normal{\bvec{y}_i}{\bvec{\mu}_{km}, \Sigma_{km}}
+            \right ]^{1[q_i=k,z_i = m]} \right ] \right \} \nonumber
+\end{eqnarray}
+which is linear in the variables $z_i$ and $q_i$ when we take the logarithm.
+Accordingly, the log-likelihood function is
+\begin{eqnarray}
+    \lk{\bvec{\theta}} &=& \sum_{k=1}^K 1[q_0=k] \, \log \pi_k \nonumber \\
+    && + \sum_{k=1}^K \sum_{l=1}^K \sum_{i=1}^T 1[q_i=k, q_{i-1}=l]\,
+        \log A_{kl} \nonumber \\
+    && + \sum_{k=1}^K \sum_{m=1}^M \sum_{i=0}^T 1[q_i=k,z_i=m] \,
+        \left [ \log b_{km} +
+            \log \normal{\bvec{y}_i}{\mu_{km}, \Sigma_{km}} \right ]
+\end{eqnarray}
+
+\end{document}
+

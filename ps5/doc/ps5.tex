@@ -190,10 +190,48 @@ This can then be solved iteratively to find a lower bound on $p$.
 
 \section{Results} \label{sect:res}
 
+\paragraph{(a)}
+I ran the collapsed Gibbs algorithm on the dataset \code{NIPS2008\_0517}
+for $10^4$ iterations and discarded the initial 50 iterations as burn in
+to find the ``ground truth'' illustrated in \fig{truth}. The top 3 topics
+are 187, 178 and 101 with probabilities $\theta = 0.44$, 0.12 and 0.08
+respectively.
+
+\paragraph{(b)}
+The $L_2$ error on the expectation value of $\theta$ for all three algorithms
+is given as a function of iteration number in \fig{results}. Note that I have
+\emph{not} discarded any burn in samples from this plot.
+
+\paragraph{(c)}
+The variational algorithm converges fastest: after $\sim N$ iterations where
+$N$ is the number of words in the document. This is the convergence rate
+is similar to what is found by Blei, Ng \& Jordan. On the other hand,
+the mean-field algorithm does \emph{not} provide an unbiased estimate of
+$\theta$. In other words, if we run either of the Gibbs algorithms forever,
+we are guaranteed to converge to the correct value of $\theta$ while the
+same is not true for the mean-field algorithm. This will always be true
+for any variational algorithm where the true distribution $p$ is not in the
+set of proposal distributions $q$ since the algorithm only provides a bound
+on the true distribution whereas the samplers are actually sampling from
+the true distribution. The benefit of the variational algorithm is that it
+converges to a very good estimate after a much smaller number of iterations.
+This would clearly be an important benefit when choosing an algorithm to
+implement for the hierarchical learning of $\ala$ and $\ba$.
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{../truth.pdf}
+    \caption{The ``ground truth'' values for the expectation values
+        of $\theta_k$. These numbers can be thought of as the fractional
+        contribution of topic $k$ to the abstract.\figlabel{truth}}
+\end{figure}
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\textwidth]{../results.pdf}
-    \caption{\figlabel{results}}
+    \caption{The $L_2$ error of the 3 algorithms as a function of the
+        number of iterations.\figlabel{results}}
 \end{figure}
 
 \newpage

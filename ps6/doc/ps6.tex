@@ -56,7 +56,32 @@
 
 \section{HMM with mixture model emissions}
 
-\paragraph{(a)} The mixture model emission probability
+\paragraph{(a)} To simplify this derivation, we can introduce the latent
+variables $z_t$ drawn from the distribution
+\begin{equation}
+    \pr{z_t | q_t} = \prod_{k = 1} ^M b_{q_t, k}^{1[z_t = k]} \quad .
+\end{equation}
+The way in which this helps the derivation of an expectation-maximization
+algorithm will come clear below but for now, it is clear how the distribution
+will factor. \Fig{gm} shows the Bayesian network factorization of this HMM
+with the hyperparameters $\{b_{ij}, \mu_{ij}, \Sigma_{ij}\}$ explicitly
+included. The transition probabilities from $q_{i-1}$ to $q_i$ are also
+governed by the hyperparameters $\{A_{ij}\}$ and the prior probability on
+$q_0$ is parameterized by the vector $\bvec{\pi}$.
+In this context, the $\bvec{y}_t$ variables will always be observed
+and we will want to learn the hyperparameters.
+
+\begin{figure}[htbp]¬
+    \begin{center}
+        \includegraphics[width=0.5\textwidth]{gm.pdf}¬
+    \end{center}
+    \caption{The full graphical model for the HMM with mixture model
+        emissions. The latent $z_t$ variables have been added for the sake of
+        the expectation-maximization algorithm.\figlabel{gm}}¬
+\end{figure}¬
+
+\paragraph{(b)}
+The mixture model emission probability
 \begin{equation}
     \pr{\bvec{y}_i | q_i} = \sum_{j = 1}^M b_{q_i,j}
         \, \normal{\bvec{y}_i}{\bvec{\mu}_{q_i,j}, \Sigma_{q_i,j}}

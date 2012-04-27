@@ -3,7 +3,7 @@ include Makefile.inc
 NAME    = ps6
 DOC_OUT = ${NAME}.${SUFF}
 
-DIRS    = gm
+default: ${DOC_OUT}
 
 %.pdf: %.tex
 	${LATEX} $<

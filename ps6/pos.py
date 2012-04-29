@@ -1,9 +1,12 @@
 """
+Source code from PGM assignment 6.
+NYU, Spring 2012.
 
+By: Dan Foreman-Mackey
 
 """
 
-__all__ = ["Sentence"]
+__all__ = ["Sentence", "Perceptron"]
 
 import numpy as np
 
@@ -46,7 +49,7 @@ class Sentence(object):
     def feature_indicator(self, y):
         """
         Given a set of assignments for the words and the observed features,
-        compute the inficator vector `f(x, y)`.
+        compute the indicator vector `f(x, y)`.
 
         """
         f = np.zeros((_ntags + np.sum(_dimcats), _ntags))
@@ -97,7 +100,7 @@ class Sentence(object):
         messages1 = np.zeros((len(self) - 1, _ntags))
         for i in range(len(self) - 1):
             # Add in the edge potential to get `psi`.
-            psi = wt + thetas[i][None, :]
+            psi = wt.T + thetas[i][None, :]
 
             # Add the other messages. On the first pass, there
             # will only ever be the message from the previous pass.
@@ -109,7 +112,7 @@ class Sentence(object):
         # Do the second pass from the top down.
         messages2 = np.zeros((len(self) - 1, _ntags))
         for i in range(1, len(self))[::-1]:
-            psi = wt.T + thetas[i][:, None]
+            psi = wt + thetas[i][:, None]
             if i < len(self) - 1:
                 psi += messages2[i][:, None]
 
@@ -129,12 +132,20 @@ class Sentence(object):
 
 
 class Perceptron(object):
+    """
+    A Perceptron machine specially designed for part-of-speech tagging.
+
+    """
     def __init__(self):
         self.w = np.zeros(_N, dtype=float)
         self.w0 = np.zeros_like(self.w)
 
-    def run(self, sentences, maxiter=50):
-        N = sum([len(s) for s in sentences])
+    def train(self, sentences, maxiter=50):
+        """
+        Given a list of sentences, learn the weight vector using the
+        Perceptron algorithm.
+
+        """
         for i in range(maxiter):
             err = 0
             for s in sentences:
@@ -142,11 +153,50 @@ class Perceptron(object):
                 err += np.sum(y != s.y)
                 delta = s.delta(y)
                 self.w += delta
-            print err / float(N)
-            self.w0 = np.array(self.w)
+            self.w0 += self.w / float(maxiter) / len(sentences)
+        return self.test(sentences)
+
+    def test(self, sentences):
+        """
+        Get the fractional error on a list of test sentences given the
+        current best setting of the weight vector.
+
+        """
+        N = sum([len(s) for s in sentences])
+        err = 0
+        for s in sentences:
+            y = s.map_query(self.w0)
+            err += np.sum(y != s.y)
+        return err / float(N)
 
 
 if __name__ == "__main__":
-    s = [Sentence("data/test-{0}.txt".format(i)) for i in range(1, 200)]
-    machine = Perceptron()
-    machine.run(s)
+    import matplotlib.pyplot as pl
+
+    test = [Sentence("data/test-{0}.txt".format(i)) for i in range(1, 1000)]
+
+    data = []
+    for N in range(100, 1001, 100):
+        machine = Perceptron()
+
+        print("Training on {0} samples...".format(N))
+
+        train = [Sentence("data/train-{0}.txt".format(i))
+                for i in range(1, N)]
+
+        train_err = machine.train(train)
+        test_err = machine.test(test)
+
+        print("\tTraining error: {0:.1f} percent".format(100 * train_err))
+        print("\tTest error: {0:.1f} percent".format(100 * test_err))
+
+        data.append([N, train_err, test_err])
+
+    data = np.array(data)
+
+    pl.plot(data[:, 0], data[:, 1], ":k")
+    pl.plot(data[:, 0], data[:, 2], "k")
+
+    pl.xlabel(r"$N$", fontsize=16)
+    pl.ylabel(r"$\mathrm{error}$", fontsize=16)
+    pl.savefig("error.pdf")
